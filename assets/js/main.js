@@ -123,10 +123,13 @@ function startPrefetch() {
   // Grupo 1: KPIs + Mensal (compartilham a chamada api.mensal)
   Promise.all([api.kpis(), api.mensal()])
     .then(([kpis, mensalData]) => {
+      // Filtra apenas meses com dados até o mês atual (não exibe meses futuros)
+      const mesAtual = new Date().getMonth() + 1;
+      const ateMesAtual = d => d.mes <= mesAtual;
       appState.data.kpis       = kpis;
-      appState.data.mensal     = mensalData.simples;
-      appState.data.mensalAcum = mensalData.acumulado;
-      appState.data.mensalPct  = mensalData.percentual;
+      appState.data.mensal     = mensalData.simples.filter(ateMesAtual);
+      appState.data.mensalAcum = mensalData.acumulado.filter(ateMesAtual);
+      appState.data.mensalPct  = mensalData.percentual.filter(ateMesAtual);
       appState.loaded.add('painel');
       appState.loaded.add('mensal');
       renderKpis(kpis);

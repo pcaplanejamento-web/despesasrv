@@ -104,19 +104,69 @@ function getElementos() {
 function getMensal() {
   var empRows = getSheetData(Config.ABA_EMPENHO);
   var gerRows = getSheetData(Config.ABA_GERAL);
+  var tz = Session.getScriptTimeZone();
+
+  // --- Passagem única por EMPENHODADOS ---
+  // empBucket[ano][mes] = valor empenhado
+  var empBucket = {};
+  var totalEmpenhado = 0;
+  var contadorAnos = {};
+
+  empRows.forEach(function(r) {
+    totalEmpenhado += parseNum(r[EMP.VL_EMP]);
+    var d = parseDate(r[EMP.DATA_EMP]);
+    if (!d) return;
+    var y = parseInt(Utilities.formatDate(d, tz, 'yyyy'), 10);
+    var m = parseInt(Utilities.formatDate(d, tz, 'M'),    10);
+    contadorAnos[y] = (contadorAnos[y] || 0) + 1;
+    if (!empBucket[y]) empBucket[y] = {};
+    empBucket[y][m] = (empBucket[y][m] || 0) + parseNum(r[EMP.VL_EMP]);
+  });
+
+  // --- Passagem única por GERALDADOS ---
+  // liqBucket[ano][mes] = { liq, anul }
+  // pgtoBucket[ano][mes] = { ret, liqL }
+  var liqBucket  = {};
+  var pgtoBucket = {};
+
+  gerRows.forEach(function(r) {
+    var dliq = parseDate(r[GER.DATA_LIQ]);
+    if (dliq) {
+      var y = parseInt(Utilities.formatDate(dliq, tz, 'yyyy'), 10);
+      var m = parseInt(Utilities.formatDate(dliq, tz, 'M'),    10);
+      if (!liqBucket[y]) liqBucket[y] = {};
+      if (!liqBucket[y][m]) liqBucket[y][m] = { liq: 0, anul: 0 };
+      liqBucket[y][m].liq  += parseNum(r[GER.VL_LIQ]);
+      liqBucket[y][m].anul += parseNum(r[GER.VL_ANUL]);
+    }
+    var dpgto = parseDate(r[GER.DATA_PGTO]);
+    if (dpgto) {
+      var yp = parseInt(Utilities.formatDate(dpgto, tz, 'yyyy'), 10);
+      var mp = parseInt(Utilities.formatDate(dpgto, tz, 'M'),    10);
+      if (!pgtoBucket[yp]) pgtoBucket[yp] = {};
+      if (!pgtoBucket[yp][mp]) pgtoBucket[yp][mp] = { ret: 0, liqL: 0 };
+      pgtoBucket[yp][mp].ret  += parseNum(r[GER.VL_RET]);
+      pgtoBucket[yp][mp].liqL += parseNum(r[GER.VL_LIQ_L]);
+    }
+  });
+
+  // Ano do exercício: o mais frequente em EMPENHODADOS
+  var anoExercicio = parseInt(Object.keys(contadorAnos).reduce(function(a, b) {
+    return contadorAnos[a] >= contadorAnos[b] ? a : b;
+  }, String(new Date().getFullYear())), 10);
+
+  // Limita ao mês atual (não exibe meses futuros)
+  var hoje = new Date();
+  var mesAtual = parseInt(Utilities.formatDate(hoje, tz, 'M'), 10);
 
   var simples = [];
-  var empTotal = 0;
 
-  for (var mes = 1; mes <= 12; mes++) {
-    var emp  = sumIfMonth(empRows, EMP.DATA_EMP,  mes, EMP.VL_EMP);
-    var liq  = sumIfMonth(gerRows, GER.DATA_LIQ,  mes, GER.VL_LIQ);
-    var anul = sumIfMonth(gerRows, GER.DATA_LIQ,  mes, GER.VL_ANUL);
-    var ret  = sumIfMonth(gerRows, GER.DATA_PGTO, mes, GER.VL_RET);
-    var liqL = sumIfMonth(gerRows, GER.DATA_PGTO, mes, GER.VL_LIQ_L);
-    var pago = ret + liqL;
-    empTotal += emp;
-    simples.push({ mes: mes, empenhado: emp, liquidado: liq, anulado: anul, retido: ret, pagoLiquido: liqL, pago: pago });
+  for (var mes = 1; mes <= mesAtual; mes++) {
+    var emp      = (empBucket[anoExercicio]  && empBucket[anoExercicio][mes])  || 0;
+    var liqData  = (liqBucket[anoExercicio]  && liqBucket[anoExercicio][mes])  || { liq: 0, anul: 0 };
+    var pgtoData = (pgtoBucket[anoExercicio] && pgtoBucket[anoExercicio][mes]) || { ret: 0, liqL: 0 };
+    var pago = pgtoData.ret + pgtoData.liqL;
+    simples.push({ mes: mes, empenhado: emp, liquidado: liqData.liq, anulado: liqData.anul, retido: pgtoData.ret, pagoLiquido: pgtoData.liqL, pago: pago });
   }
 
   // Acumulado (running sum)
@@ -129,9 +179,8 @@ function getMensal() {
     acumulado.push({ mes: d.mes, empAcum: accEmp, liqAcum: accLiq, pagoAcum: accPago });
   });
 
-  // Total empenhado para base percentual
-  var kpis = getKpis();
-  var base = kpis.empenhado || 1;
+  // Base percentual = total geral empenhado (inclui linhas sem data)
+  var base = totalEmpenhado || 1;
 
   // Percentual acumulado
   var percentual = acumulado.map(function(d, i) {

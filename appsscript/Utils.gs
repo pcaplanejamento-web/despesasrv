@@ -40,8 +40,13 @@ function parseDate(val) {
 function getMonth(val) {
   var d = parseDate(val);
   if (!d) return null;
-  // Usa o fuso do script para evitar erro de UTC vs. horário local
   return parseInt(Utilities.formatDate(d, Session.getScriptTimeZone(), 'M'), 10);
+}
+
+function getYear(val) {
+  var d = parseDate(val);
+  if (!d) return null;
+  return parseInt(Utilities.formatDate(d, Session.getScriptTimeZone(), 'yyyy'), 10);
 }
 
 // SUMIF equivalente sobre um array de linhas
@@ -59,11 +64,26 @@ function sumIf(rows, colIdx, criterion, sumIdx) {
   return total;
 }
 
-// SUMIF por mês (compara mês extraído da coluna de data)
+// SUMIF por mês e ano (evita mistura de exercícios fiscais)
 function sumIfMonth(rows, dateColIdx, month, sumIdx) {
   var total = 0;
   for (var i = 0; i < rows.length; i++) {
     if (getMonth(rows[i][dateColIdx]) === month) {
+      total += parseNum(rows[i][sumIdx]);
+    }
+  }
+  return total;
+}
+
+function sumIfMonthYear(rows, dateColIdx, month, year, sumIdx) {
+  var total = 0;
+  for (var i = 0; i < rows.length; i++) {
+    var d = parseDate(rows[i][dateColIdx]);
+    if (!d) continue;
+    var tz = Session.getScriptTimeZone();
+    var m  = parseInt(Utilities.formatDate(d, tz, 'M'), 10);
+    var y  = parseInt(Utilities.formatDate(d, tz, 'yyyy'), 10);
+    if (m === month && y === year) {
       total += parseNum(rows[i][sumIdx]);
     }
   }
