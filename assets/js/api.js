@@ -29,6 +29,10 @@ function writeCache(key, data) {
   }
 }
 
+// Timeout em ms por rota (rotas pesadas precisam de mais tempo)
+const ROUTE_TIMEOUT = { mensal: 120_000, tabela: 120_000 };
+const DEFAULT_TIMEOUT = 30_000;
+
 async function fetchRoute(route, params = {}) {
   const key = cacheKey(route, JSON.stringify(params));
   const cached = readCache(key);
@@ -40,7 +44,17 @@ async function fetchRoute(route, params = {}) {
     url.searchParams.set(k, v);
   }
 
-  const resp = await fetch(url.toString());
+  const timeout = ROUTE_TIMEOUT[route] ?? DEFAULT_TIMEOUT;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeout);
+
+  let resp;
+  try {
+    resp = await fetch(url.toString(), { signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+
   if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
 
   const json = await resp.json();
