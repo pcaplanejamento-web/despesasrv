@@ -28,8 +28,8 @@ const appState = {
   rendered: new Set(), // seções com gráficos renderizados no canvas
 };
 
-// Grupos de carga (um grupo = uma ou mais chamadas de API correlacionadas)
-const LOAD_GROUPS = ['painel', 'orgaos', 'acoes', 'elementos', 'brutos'];
+// Grupos de carga — 'mensal' separado de 'painel' para falha isolada
+const LOAD_GROUPS = ['painel', 'mensal', 'orgaos', 'acoes', 'elementos', 'brutos'];
 let completedCount = 0;
 
 /* ── Utilitários de UI ── */
@@ -120,25 +120,32 @@ function startPrefetch() {
   document.querySelectorAll('.section-error').forEach(el => el.remove());
   setHeaderStatus('Carregando…');
 
-  // Grupo 1: KPIs + Mensal (compartilham a chamada api.mensal)
-  Promise.all([api.kpis(), api.mensal()])
-    .then(([kpis, mensalData]) => {
-      // Filtra apenas meses com dados até o mês atual (não exibe meses futuros)
+  // Grupo 1a: KPIs — independente do mensal para não bloquear o Painel
+  api.kpis()
+    .then(kpis => {
+      appState.data.kpis = kpis;
+      appState.loaded.add('painel');
+      renderKpis(kpis);
+      if (appState.activeSection === 'painel') renderCharts('painel');
+      onGroupComplete();
+    })
+    .catch(err => onGroupError(err, 'painel'));
+
+  // Grupo 1b: Mensal — falha isolada não afeta KPIs nem outras seções
+  api.mensal()
+    .then(mensalData => {
       const mesAtual = new Date().getMonth() + 1;
       const ateMesAtual = d => d.mes <= mesAtual;
-      appState.data.kpis       = kpis;
       appState.data.mensal     = mensalData.simples.filter(ateMesAtual);
       appState.data.mensalAcum = mensalData.acumulado.filter(ateMesAtual);
       appState.data.mensalPct  = mensalData.percentual.filter(ateMesAtual);
-      appState.loaded.add('painel');
       appState.loaded.add('mensal');
-      renderKpis(kpis);
-      renderTableMensal(mensalData.percentual);
+      renderTableMensal(appState.data.mensalPct);
       if (appState.activeSection === 'painel') renderCharts('painel');
       if (appState.activeSection === 'mensal') renderCharts('mensal');
       onGroupComplete();
     })
-    .catch(err => onGroupError(err, 'painel'));
+    .catch(err => onGroupError(err, 'mensal'));
 
   // Grupo 2: Por Órgão
   api.orgaos()
