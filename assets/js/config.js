@@ -1,6 +1,6 @@
 // config.js — URL do Apps Script, constantes globais e utilitários de formatação
 
-export const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/COLE_O_ID_DO_WEB_APP_AQUI/exec';
+export const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwJbvOZt52XnnvgrLBVLO9mCgEiC1t9FgaCxiQuzDqVVPQzRqkAOh9E4dEABYlY664-/exec';
 
 export const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutos
 
