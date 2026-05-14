@@ -1,0 +1,19 @@
+/* charts.css — contêineres e dimensionamento dos gráficos */
+
+.chart-wrap {
+  padding: 20px;
+  position: relative;
+  height: 320px;
+}
+
+.chart-wrap--horizontal {
+  height: 380px;
+}
+
+.chart-wrap--tall {
+  height: 520px;
+}
+
+.chart-wrap canvas {
+  max-width: 100%;
+}
