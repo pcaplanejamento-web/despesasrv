@@ -3,12 +3,30 @@
 import { formatCurrency, formatPercent } from './config.js';
 
 const KPI_DEFS = [
-  { key: 'empenhado',    label: 'Total Empenhado',    color: 'var(--color-primary)' },
-  { key: 'liquidado',    label: 'Total Liquidado',    color: 'var(--color-primary-light)' },
-  { key: 'pago',         label: 'Total Pago',         color: 'var(--color-positive)' },
-  { key: 'anulado',      label: 'Total Anulado',      color: 'var(--color-negative)' },
-  { key: 'retido',       label: 'Total Retido',       color: 'var(--color-warning)' },
-  { key: 'pctLiquidado', label: '% Liquidado / Emp.', color: 'var(--color-primary)', pct: true },
+  {
+    key: 'empenhado', label: 'Total Empenhado', colorClass: 'kpi-blue',
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>`,
+  },
+  {
+    key: 'liquidado', label: 'Total Liquidado', colorClass: 'kpi-green',
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`,
+  },
+  {
+    key: 'pago', label: 'Total Pago', colorClass: 'kpi-teal',
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>`,
+  },
+  {
+    key: 'anulado', label: 'Total Anulado', colorClass: 'kpi-rose',
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`,
+  },
+  {
+    key: 'retido', label: 'Total Retido', colorClass: 'kpi-amber',
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
+  },
+  {
+    key: 'pctLiquidado', label: '% Liquidado / Emp.', colorClass: 'kpi-purple', pct: true,
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>`,
+  },
 ];
 
 function buildCard(def, data) {
@@ -23,9 +41,10 @@ function buildCard(def, data) {
       : '';
 
   return `
-    <div class="kpi-card" data-kpi="${def.key}">
+    <div class="kpi-card ${def.colorClass}" data-kpi="${def.key}">
+      <div class="kpi-icon">${def.icon}</div>
       <span class="kpi-label">${def.label}</span>
-      <span class="kpi-value" style="color:${def.color}">${display}</span>
+      <span class="kpi-value">${display}</span>
       ${subLabel ? `<span class="kpi-sub">${subLabel}</span>` : ''}
     </div>`;
 }

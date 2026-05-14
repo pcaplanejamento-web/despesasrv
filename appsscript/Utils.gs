@@ -39,7 +39,9 @@ function parseDate(val) {
 
 function getMonth(val) {
   var d = parseDate(val);
-  return d ? d.getMonth() + 1 : null; // 1-12
+  if (!d) return null;
+  // Usa o fuso do script para evitar erro de UTC vs. horário local
+  return parseInt(Utilities.formatDate(d, Session.getScriptTimeZone(), 'M'), 10);
 }
 
 // SUMIF equivalente sobre um array de linhas
