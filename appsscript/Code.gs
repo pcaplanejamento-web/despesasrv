@@ -19,7 +19,7 @@ function doGet(e) {
   try {
     var payload = handleRoute(route, params);
     var json    = JSON.stringify(payload);
-    cache.put(cacheKey, json, Config.CACHE_TTL);
+    try { cache.put(cacheKey, json, Config.CACHE_TTL); } catch (cacheErr) { /* dados grandes demais para cache */ }
     return jsonResponse(payload);
   } catch (err) {
     return errorResponse(err.message);

@@ -272,3 +272,14 @@
   padding: 32px !important;
   font-size: .85rem;
 }
+
+/* ── Erro inline de seção ── */
+.section-error {
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  font-size: .85rem;
+  color: #664d03;
+  margin-bottom: 20px;
+}

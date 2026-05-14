@@ -1,4 +1,4 @@
-// main.js — inicialização, roteamento entre seções e orquestração dos módulos
+// main.js — inicialização, prefetch paralelo de todos os dados e roteamento entre seções
 
 import { SECTION_TITLES } from './config.js';
 import { api, clearCache } from './api.js';
@@ -23,11 +23,16 @@ import {
 /* ── Estado global ── */
 const appState = {
   activeSection: null,
-  loaded: new Set(),
-  data: {},
+  data:     {},
+  loaded:   new Set(), // seções com dados prontos
+  rendered: new Set(), // seções com gráficos renderizados no canvas
 };
 
-/* ── Utils UI ── */
+// Grupos de carga (um grupo = uma ou mais chamadas de API correlacionadas)
+const LOAD_GROUPS = ['painel', 'orgaos', 'acoes', 'elementos', 'brutos'];
+let completedCount = 0;
+
+/* ── Utilitários de UI ── */
 function showError(msg) {
   const toast = document.getElementById('errorToast');
   const msgEl = document.getElementById('errorMessage');
@@ -40,10 +45,142 @@ function hideError() {
   document.getElementById('errorToast')?.classList.add('hidden');
 }
 
-function setHeaderUpdate(date = new Date()) {
+function setHeaderStatus(text) {
   const el = document.getElementById('headerUpdate');
-  if (!el) return;
-  el.textContent = `Atualizado em ${date.toLocaleString('pt-BR')}`;
+  if (el) el.textContent = text;
+}
+
+/* ── Progresso de carregamento ── */
+function onGroupComplete() {
+  completedCount++;
+  const success = LOAD_GROUPS.filter(g => appState.loaded.has(g)).length;
+  const total   = LOAD_GROUPS.length;
+  if (completedCount >= total) {
+    if (success === total) {
+      setHeaderStatus(`Atualizado em ${new Date().toLocaleString('pt-BR')}`);
+      hideError();
+    } else {
+      setHeaderStatus(`Parcialmente atualizado — ${success} de ${total} seções`);
+    }
+  } else {
+    setHeaderStatus(`Carregando… ${success} de ${total}`);
+  }
+}
+
+function onGroupError(err, groupName) {
+  console.error('[DespesasPMRV]', groupName, err);
+  if (groupName === 'painel') {
+    showError(`Erro ao carregar dados: ${err.message}`);
+    setHeaderStatus('Erro ao carregar dados');
+  } else {
+    showSectionError(groupName, err.message);
+  }
+  onGroupComplete();
+}
+
+function showSectionError(groupName, msg) {
+  const el = document.getElementById(`section-${groupName}`);
+  if (!el || el.querySelector('.section-error')) return;
+  const div = document.createElement('div');
+  div.className = 'section-error';
+  div.textContent = `Não foi possível carregar os dados desta seção: ${msg}`;
+  el.prepend(div);
+}
+
+/* ── Renderização de gráficos (canvas precisa estar visível) ── */
+function renderCharts(section) {
+  if (appState.rendered.has(section)) return;
+  switch (section) {
+    case 'painel':
+      renderChartMensalBarras(appState.data.mensal ?? []);
+      renderChartMensalLinha(appState.data.mensalAcum ?? []);
+      break;
+    case 'orgaos':
+      if (appState.data.orgaos) renderChartOrgaos(appState.data.orgaos);
+      break;
+    case 'acoes':
+      if (appState.data.acoes) renderChartAcoes(appState.data.acoes);
+      break;
+    case 'elementos':
+      if (appState.data.elementos) renderChartElementos(appState.data.elementos);
+      break;
+    case 'mensal':
+      if (appState.data.mensalPct) renderChartProgressao(appState.data.mensalPct);
+      break;
+  }
+  appState.rendered.add(section);
+}
+
+/* ── Prefetch paralelo — dispara tudo ao entrar na página ── */
+function startPrefetch() {
+  completedCount = 0;
+  appState.loaded.clear();
+  appState.rendered.clear();
+  appState.data = {};
+  document.querySelectorAll('.section-error').forEach(el => el.remove());
+  setHeaderStatus('Carregando…');
+
+  // Grupo 1: KPIs + Mensal (compartilham a chamada api.mensal)
+  Promise.all([api.kpis(), api.mensal()])
+    .then(([kpis, mensalData]) => {
+      appState.data.kpis       = kpis;
+      appState.data.mensal     = mensalData.simples;
+      appState.data.mensalAcum = mensalData.acumulado;
+      appState.data.mensalPct  = mensalData.percentual;
+      appState.loaded.add('painel');
+      appState.loaded.add('mensal');
+      renderKpis(kpis);
+      renderTableMensal(mensalData.percentual);
+      if (appState.activeSection === 'painel') renderCharts('painel');
+      if (appState.activeSection === 'mensal') renderCharts('mensal');
+      onGroupComplete();
+    })
+    .catch(err => onGroupError(err, 'painel'));
+
+  // Grupo 2: Por Órgão
+  api.orgaos()
+    .then(dados => {
+      appState.data.orgaos = dados;
+      appState.loaded.add('orgaos');
+      renderTableOrgaos(dados);
+      if (appState.activeSection === 'orgaos') renderCharts('orgaos');
+      onGroupComplete();
+    })
+    .catch(err => onGroupError(err, 'orgaos'));
+
+  // Grupo 3: Por Ação
+  api.acoes()
+    .then(dados => {
+      appState.data.acoes = dados;
+      appState.loaded.add('acoes');
+      renderTableAcoes(dados);
+      if (appState.activeSection === 'acoes') renderCharts('acoes');
+      onGroupComplete();
+    })
+    .catch(err => onGroupError(err, 'acoes'));
+
+  // Grupo 4: Por Elemento
+  api.elementos()
+    .then(dados => {
+      appState.data.elementos = dados;
+      appState.loaded.add('elementos');
+      renderTableElementos(dados);
+      if (appState.activeSection === 'elementos') renderCharts('elementos');
+      onGroupComplete();
+    })
+    .catch(err => onGroupError(err, 'elementos'));
+
+  // Grupo 5: Dados Brutos (empenho + geral)
+  Promise.all([api.empenho(), api.geral()])
+    .then(([empenho, geral]) => {
+      appState.data.empenhoRows = empenho.rows;
+      appState.data.geralRows   = geral.rows;
+      appState.loaded.add('brutos');
+      renderTableEmpenho(empenho.rows);
+      renderTableGeral(geral.rows);
+      onGroupComplete();
+    })
+    .catch(err => onGroupError(err, 'brutos'));
 }
 
 /* ── Navegação entre seções ── */
@@ -62,87 +199,13 @@ function navigateTo(section) {
   appState.activeSection = section;
   history.pushState({ section }, '', `#${section}`);
 
-  loadSection(section);
+  // Dados já prontos: renderizar gráficos (canvas precisa estar visível)
+  if (appState.loaded.has(section)) renderCharts(section);
+
   closeSidebar();
 }
 
-/* ── Carregamento por seção ── */
-async function loadSection(section) {
-  if (appState.loaded.has(section)) return;
-
-  try {
-    hideError();
-
-    switch (section) {
-      case 'painel':    await loadPainel();    break;
-      case 'orgaos':    await loadOrgaos();    break;
-      case 'acoes':     await loadAcoes();     break;
-      case 'elementos': await loadElementos(); break;
-      case 'mensal':    await loadMensal();    break;
-      case 'brutos':    await loadBrutos();    break;
-    }
-
-    appState.loaded.add(section);
-    setHeaderUpdate();
-  } catch (err) {
-    const updateEl = document.getElementById('headerUpdate');
-    if (updateEl) updateEl.textContent = 'Erro ao carregar dados';
-    showError(`Falha ao buscar dados: ${err.message}. Configure a URL do Apps Script em assets/js/config.js.`);
-    console.error('[DespesasPMRV]', err);
-  }
-}
-
-async function loadPainel() {
-  const [kpis, mensal] = await Promise.all([api.kpis(), api.mensal()]);
-  appState.data.kpis   = kpis;
-  appState.data.mensal = mensal.simples;
-  appState.data.mensalAcum = mensal.acumulado;
-  appState.data.mensalPct  = mensal.percentual;
-
-  renderKpis(kpis);
-  renderChartMensalBarras(mensal.simples);
-  renderChartMensalLinha(mensal.acumulado);
-}
-
-async function loadOrgaos() {
-  const dados = await api.orgaos();
-  appState.data.orgaos = dados;
-  renderChartOrgaos(dados);
-  renderTableOrgaos(dados);
-}
-
-async function loadAcoes() {
-  const dados = await api.acoes();
-  appState.data.acoes = dados;
-  renderChartAcoes(dados);
-  renderTableAcoes(dados);
-}
-
-async function loadElementos() {
-  const dados = await api.elementos();
-  appState.data.elementos = dados;
-  renderChartElementos(dados);
-  renderTableElementos(dados);
-}
-
-async function loadMensal() {
-  if (!appState.data.mensalPct) {
-    const resp = await api.mensal();
-    appState.data.mensal     = resp.simples;
-    appState.data.mensalAcum = resp.acumulado;
-    appState.data.mensalPct  = resp.percentual;
-  }
-  renderChartProgressao(appState.data.mensalPct);
-  renderTableMensal(appState.data.mensalPct);
-}
-
-async function loadBrutos() {
-  const [empenho, geral] = await Promise.all([api.empenho(), api.geral()]);
-  renderTableEmpenho(empenho.rows);
-  renderTableGeral(geral.rows);
-}
-
-/* ── Tabs (Dados Brutos) ── */
+/* ── Tabs internas (Dados Brutos) ── */
 function initTabs() {
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -177,9 +240,7 @@ function initSidebar() {
 function initRefresh() {
   document.getElementById('btnRefresh')?.addEventListener('click', () => {
     clearCache();
-    appState.loaded.clear();
-    appState.data = {};
-    loadSection(appState.activeSection);
+    startPrefetch();
   });
 }
 
@@ -188,7 +249,7 @@ function initToast() {
   document.getElementById('toastClose')?.addEventListener('click', hideError);
 }
 
-/* ── Roteamento inicial (hash) ── */
+/* ── Hash inicial ── */
 function resolveInitialSection() {
   const hash = location.hash.replace('#', '');
   return Object.keys(SECTION_TITLES).includes(hash) ? hash : 'painel';
@@ -209,12 +270,11 @@ function init() {
   initTableGeral();
 
   window.addEventListener('popstate', e => {
-    const section = e.state?.section ?? resolveInitialSection();
-    navigateTo(section);
+    navigateTo(e.state?.section ?? resolveInitialSection());
   });
 
-  const initial = resolveInitialSection();
-  navigateTo(initial);
+  navigateTo(resolveInitialSection());
+  startPrefetch(); // dispara todos os fetches em paralelo imediatamente
 }
 
 document.addEventListener('DOMContentLoaded', init);
