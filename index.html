@@ -6,7 +6,7 @@
   <title>Despesas PMRV</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/css/main.css" />
   <link rel="stylesheet" href="assets/css/layout.css" />
   <link rel="stylesheet" href="assets/css/components.css" />
@@ -14,364 +14,397 @@
 </head>
 <body>
 
-  <!-- Sidebar -->
-  <aside class="sidebar" id="sidebar">
-    <div class="sidebar-brand">
-      <img src="assets/img/logo.svg" alt="PCA Planejamento" class="sidebar-logo" />
-      <span class="sidebar-title">Despesas PMRV</span>
-    </div>
-    <nav class="sidebar-nav" aria-label="Navegação principal">
-      <ul class="nav-list">
-        <li class="nav-item">
-          <a href="#painel" class="nav-link active" data-section="painel">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-            Painel
-          </a>
-        </li>
-        <li class="nav-item">
-          <a href="#orgaos" class="nav-link" data-section="orgaos">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-            Por Órgão
-          </a>
-        </li>
-        <li class="nav-item">
-          <a href="#acoes" class="nav-link" data-section="acoes">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-            Por Ação
-          </a>
-        </li>
-        <li class="nav-item">
-          <a href="#elementos" class="nav-link" data-section="elementos">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
-            Por Elemento
-          </a>
-        </li>
-        <li class="nav-item">
-          <a href="#mensal" class="nav-link" data-section="mensal">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            Evolução Mensal
-          </a>
-        </li>
-        <li class="nav-item">
-          <a href="#brutos" class="nav-link" data-section="brutos">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-            Dados Brutos
-          </a>
-        </li>
-      </ul>
-    </nav>
-    <div class="sidebar-footer">
-      <span class="sidebar-footer-text">PCA Planejamento</span>
-    </div>
-  </aside>
+<!-- Overlay mobile -->
+<div class="menu-overlay" id="menuOverlay"></div>
 
-  <!-- Main -->
-  <div class="main-wrapper">
-    <header class="main-header">
-      <button class="btn-menu" id="btnMenu" aria-label="Abrir menu">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+<!-- ═══════════════ SIDEBAR ═══════════════ -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <img src="assets/img/logo.svg" alt="PCA" class="sidebar-logo" />
+    <div>
+      <div class="sidebar-title">Despesas PMRV</div>
+      <div class="sidebar-subtitle">Rio Verde · GO</div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav" aria-label="Navegação principal">
+    <ul class="nav-list">
+      <li class="nav-item">
+        <a href="#painel" class="nav-link active" data-section="painel">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          Painel
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="#orgaos" class="nav-link" data-section="orgaos">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          Por Órgão
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="#acoes" class="nav-link" data-section="acoes">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Por Ação
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="#elementos" class="nav-link" data-section="elementos">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+          Por Elemento
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="#mensal" class="nav-link" data-section="mensal">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Evolução Mensal
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="#brutos" class="nav-link" data-section="brutos">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          Dados Brutos
+        </a>
+      </li>
+    </ul>
+  </nav>
+
+  <div class="sidebar-footer">
+    <span class="sidebar-footer-text">PCA Planejamento &copy; 2025</span>
+  </div>
+</aside>
+
+<!-- ═══════════════ MAIN ═══════════════ -->
+<div class="main-wrapper">
+
+  <header class="main-header">
+    <button class="btn-menu" id="btnMenu" aria-label="Abrir menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <div class="header-info">
+      <h1 class="header-title" id="headerTitle">Painel</h1>
+      <span class="header-update" id="headerUpdate">Carregando...</span>
+    </div>
+    <div class="header-actions">
+      <button class="btn-refresh" id="btnRefresh" title="Atualizar dados">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
       </button>
-      <div class="header-info">
-        <h1 class="header-title" id="headerTitle">Painel</h1>
-        <span class="header-update" id="headerUpdate">Carregando...</span>
+    </div>
+  </header>
+
+  <main class="main-content" id="mainContent">
+
+    <!-- ══ PAINEL ══ -->
+    <section class="section active" id="section-painel">
+      <div class="kpi-grid" id="kpiGrid">
+        <div class="kpi-card skeleton kpi-blue"></div>
+        <div class="kpi-card skeleton kpi-green"></div>
+        <div class="kpi-card skeleton kpi-teal"></div>
+        <div class="kpi-card skeleton kpi-rose"></div>
+        <div class="kpi-card skeleton kpi-amber"></div>
+        <div class="kpi-card skeleton kpi-purple"></div>
       </div>
-      <div class="header-actions">
-        <button class="btn-refresh" id="btnRefresh" title="Atualizar dados">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-        </button>
+
+      <div class="chart-row">
+        <div class="chart-card">
+          <div class="section-banner section-banner--blue">
+            <div class="banner-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><polyline points="8 21 12 17 16 21"/></svg></div>
+            <div class="banner-text">
+              <span class="banner-title">Empenho x Liquidacao x Pagamento por Mes</span>
+              <span class="banner-sub">Comparativo mensal de execucao orcamentaria</span>
+            </div>
+          </div>
+          <div class="chart-wrap"><canvas id="chartMensalBarras"></canvas></div>
+        </div>
       </div>
-    </header>
 
-    <main class="main-content" id="mainContent">
-
-      <!-- Secao: Painel -->
-      <section class="section active" id="section-painel">
-        <div class="kpi-grid" id="kpiGrid">
-          <div class="kpi-card skeleton" data-kpi="empenhado"></div>
-          <div class="kpi-card skeleton" data-kpi="liquidado"></div>
-          <div class="kpi-card skeleton" data-kpi="pago"></div>
-          <div class="kpi-card skeleton" data-kpi="anulado"></div>
-          <div class="kpi-card skeleton" data-kpi="retido"></div>
-          <div class="kpi-card skeleton" data-kpi="pct-liquidado"></div>
-        </div>
-        <div class="chart-row">
-          <div class="chart-card">
-            <div class="chart-card-header">
-              <h2 class="chart-title">Empenho x Liquidacao x Pagamento por Mes</h2>
-            </div>
-            <div class="chart-wrap">
-              <canvas id="chartMensalBarras"></canvas>
+      <div class="chart-row">
+        <div class="chart-card">
+          <div class="section-banner section-banner--indigo">
+            <div class="banner-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+            <div class="banner-text">
+              <span class="banner-title">Evolucao Acumulada Mensal</span>
+              <span class="banner-sub">Progressao de empenho, liquidacao e pagamento</span>
             </div>
           </div>
+          <div class="chart-wrap chart-wrap--line"><canvas id="chartMensalLinha"></canvas></div>
         </div>
-        <div class="chart-row">
-          <div class="chart-card">
-            <div class="chart-card-header">
-              <h2 class="chart-title">Evolucao Acumulada Mensal</h2>
-            </div>
-            <div class="chart-wrap">
-              <canvas id="chartMensalLinha"></canvas>
-            </div>
-          </div>
-        </div>
-      </section>
+      </div>
+    </section>
 
-      <!-- Secao: Por Orgao -->
-      <section class="section" id="section-orgaos">
-        <div class="chart-row">
-          <div class="chart-card">
-            <div class="chart-card-header">
-              <h2 class="chart-title">Top 10 Orgaos por Valor Empenhado</h2>
-            </div>
-            <div class="chart-wrap chart-wrap--horizontal">
-              <canvas id="chartOrgaos"></canvas>
+    <!-- ══ POR ORGAO ══ -->
+    <section class="section" id="section-orgaos">
+      <div class="chart-row">
+        <div class="chart-card">
+          <div class="section-banner section-banner--blue">
+            <div class="banner-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div>
+            <div class="banner-text">
+              <span class="banner-title">Top 10 Orgaos por Valor Empenhado</span>
+              <span class="banner-sub">Maiores volumes de despesa por unidade gestora</span>
             </div>
           </div>
+          <div class="chart-wrap chart-wrap--horizontal"><canvas id="chartOrgaos"></canvas></div>
         </div>
+      </div>
+      <div class="table-card">
+        <div class="section-banner section-banner--indigo">
+          <div class="banner-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></div>
+          <div class="banner-text">
+            <span class="banner-title">Demonstrativo por Orgao</span>
+            <span class="banner-sub">Empenho, liquidacao, anulado, retido e pago</span>
+          </div>
+          <div class="banner-actions">
+            <input type="text" class="search-input" id="searchOrgaos" placeholder="Buscar orgao..." />
+            <button class="btn-export" data-table="orgaos">Exportar CSV</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table" id="tableOrgaos">
+            <thead><tr>
+              <th data-col="orgao" class="sortable">Orgao</th>
+              <th data-col="empenhado" class="sortable num">Empenhado</th>
+              <th data-col="liquidado" class="sortable num">Liquidado</th>
+              <th data-col="anulado" class="sortable num">Anulado</th>
+              <th data-col="retido" class="sortable num">Retido</th>
+              <th data-col="pago" class="sortable num">Pago</th>
+            </tr></thead>
+            <tbody id="tbodyOrgaos"><tr class="skeleton-row"><td colspan="6"></td></tr></tbody>
+          </table>
+        </div>
+        <div class="pagination" id="paginationOrgaos"></div>
+      </div>
+    </section>
+
+    <!-- ══ POR ACAO ══ -->
+    <section class="section" id="section-acoes">
+      <div class="chart-row">
+        <div class="chart-card">
+          <div class="section-banner section-banner--green">
+            <div class="banner-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+            <div class="banner-text">
+              <span class="banner-title">Top 15 Acoes por Valor Empenhado</span>
+              <span class="banner-sub">Acoes com maior volume orcamentario</span>
+            </div>
+          </div>
+          <div class="chart-wrap chart-wrap--horizontal chart-wrap--tall"><canvas id="chartAcoes"></canvas></div>
+        </div>
+      </div>
+      <div class="table-card">
+        <div class="section-banner section-banner--green">
+          <div class="banner-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></div>
+          <div class="banner-text">
+            <span class="banner-title">Demonstrativo por Acao</span>
+            <span class="banner-sub">Execucao orcamentaria por acao governamental</span>
+          </div>
+          <div class="banner-actions">
+            <input type="text" class="search-input" id="searchAcoes" placeholder="Buscar acao..." />
+            <button class="btn-export" data-table="acoes">Exportar CSV</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table" id="tableAcoes">
+            <thead><tr>
+              <th data-col="acao" class="sortable">Acao</th>
+              <th data-col="empenhado" class="sortable num">Empenhado</th>
+              <th data-col="liquidado" class="sortable num">Liquidado</th>
+              <th data-col="anulado" class="sortable num">Anulado</th>
+              <th data-col="retido" class="sortable num">Retido</th>
+              <th data-col="pago" class="sortable num">Pago</th>
+            </tr></thead>
+            <tbody id="tbodyAcoes"><tr class="skeleton-row"><td colspan="6"></td></tr></tbody>
+          </table>
+        </div>
+        <div class="pagination" id="paginationAcoes"></div>
+      </div>
+    </section>
+
+    <!-- ══ POR ELEMENTO ══ -->
+    <section class="section" id="section-elementos">
+      <div class="chart-row">
+        <div class="chart-card">
+          <div class="section-banner section-banner--purple">
+            <div class="banner-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg></div>
+            <div class="banner-text">
+              <span class="banner-title">Top 15 Elementos por Valor Empenhado</span>
+              <span class="banner-sub">Natureza de despesa com maior volume</span>
+            </div>
+          </div>
+          <div class="chart-wrap chart-wrap--horizontal chart-wrap--tall"><canvas id="chartElementos"></canvas></div>
+        </div>
+      </div>
+      <div class="table-card">
+        <div class="section-banner section-banner--purple">
+          <div class="banner-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></div>
+          <div class="banner-text">
+            <span class="banner-title">Demonstrativo por Elemento</span>
+            <span class="banner-sub">Natureza de despesa detalhada</span>
+          </div>
+          <div class="banner-actions">
+            <input type="text" class="search-input" id="searchElementos" placeholder="Buscar elemento..." />
+            <button class="btn-export" data-table="elementos">Exportar CSV</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table" id="tableElementos">
+            <thead><tr>
+              <th data-col="elemento" class="sortable">Elemento</th>
+              <th data-col="empenhado" class="sortable num">Empenhado</th>
+              <th data-col="liquidado" class="sortable num">Liquidado</th>
+              <th data-col="anulado" class="sortable num">Anulado</th>
+              <th data-col="retido" class="sortable num">Retido</th>
+              <th data-col="pago" class="sortable num">Pago</th>
+            </tr></thead>
+            <tbody id="tbodyElementos"><tr class="skeleton-row"><td colspan="6"></td></tr></tbody>
+          </table>
+        </div>
+        <div class="pagination" id="paginationElementos"></div>
+      </div>
+    </section>
+
+    <!-- ══ EVOLUCAO MENSAL ══ -->
+    <section class="section" id="section-mensal">
+      <div class="chart-row">
+        <div class="chart-card">
+          <div class="section-banner section-banner--amber">
+            <div class="banner-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+            <div class="banner-text">
+              <span class="banner-title">Progressao Percentual Mensal</span>
+              <span class="banner-sub">Evolucao acumulada em relacao ao total empenhado</span>
+            </div>
+          </div>
+          <div class="chart-wrap"><canvas id="chartProgressao"></canvas></div>
+        </div>
+      </div>
+      <div class="table-card">
+        <div class="section-banner section-banner--amber">
+          <div class="banner-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+          <div class="banner-text">
+            <span class="banner-title">Demonstrativo Mensal</span>
+            <span class="banner-sub">Valores e percentuais mensais acumulados</span>
+          </div>
+          <div class="banner-actions">
+            <button class="btn-export" data-table="mensal">Exportar CSV</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table" id="tableMensal">
+            <thead><tr>
+              <th data-col="mes" class="sortable">Mes</th>
+              <th data-col="empenhado" class="sortable num">Empenhado</th>
+              <th data-col="liquidado" class="sortable num">Liquidado</th>
+              <th data-col="anulado" class="sortable num">Anulado</th>
+              <th data-col="retido" class="sortable num">Retido</th>
+              <th data-col="pago" class="sortable num">Pago</th>
+              <th data-col="pctEmpenhado" class="sortable num">% Emp. Acum.</th>
+              <th data-col="pctPago" class="sortable num">% Pago Acum.</th>
+            </tr></thead>
+            <tbody id="tbodyMensal"><tr class="skeleton-row"><td colspan="8"></td></tr></tbody>
+          </table>
+        </div>
+        <div class="pagination" id="paginationMensal"></div>
+      </div>
+    </section>
+
+    <!-- ══ DADOS BRUTOS ══ -->
+    <section class="section" id="section-brutos">
+      <div class="tabs-bar">
+        <button class="tab-btn active" data-tab="empenho">Empenhos</button>
+        <button class="tab-btn" data-tab="geral">Liquidacoes / Pagamentos</button>
+      </div>
+
+      <div class="tab-panel active" id="tab-empenho">
         <div class="table-card">
-          <div class="table-card-header">
-            <h2 class="table-title">Demonstrativo por Orgao</h2>
-            <div class="table-controls">
-              <input type="text" class="search-input" id="searchOrgaos" placeholder="Buscar orgao..." />
-              <button class="btn-export" data-table="orgaos">Exportar CSV</button>
+          <div class="section-banner section-banner--rose">
+            <div class="banner-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+            <div class="banner-text">
+              <span class="banner-title">Dados de Empenho (EMPENHODADOS)</span>
+              <span class="banner-sub">Registros brutos de empenho orcamentario</span>
+            </div>
+            <div class="banner-actions">
+              <input type="text" class="search-input" id="searchEmpenho" placeholder="Buscar..." />
+              <button class="btn-export" data-table="empenho">Exportar CSV</button>
             </div>
           </div>
           <div class="table-wrap">
-            <table class="data-table" id="tableOrgaos">
-              <thead>
-                <tr>
-                  <th data-col="orgao" class="sortable">Orgao</th>
-                  <th data-col="empenhado" class="sortable num">Empenhado</th>
-                  <th data-col="liquidado" class="sortable num">Liquidado</th>
-                  <th data-col="anulado" class="sortable num">Anulado</th>
-                  <th data-col="retido" class="sortable num">Retido</th>
-                  <th data-col="pago" class="sortable num">Pago</th>
-                </tr>
-              </thead>
-              <tbody id="tbodyOrgaos"><tr class="skeleton-row"><td colspan="6"></td></tr></tbody>
+            <table class="data-table table-sm" id="tableEmpenho">
+              <thead><tr>
+                <th class="sortable">Contrato</th>
+                <th class="sortable">Orgao</th>
+                <th class="sortable">Unidade</th>
+                <th class="sortable">Credor</th>
+                <th class="sortable">Tipo Despesa</th>
+                <th class="sortable">Id Nota</th>
+                <th class="sortable">Data Empenho</th>
+                <th class="sortable num">Vl. Empenho</th>
+                <th class="sortable num">Vl. Liquidado</th>
+                <th class="sortable num">Vl. Anulado</th>
+                <th class="sortable num">Vl. Retido</th>
+                <th class="sortable num">Vl. Liquido</th>
+                <th class="sortable">Modalidade</th>
+                <th class="sortable">Acao</th>
+                <th class="sortable">Elemento</th>
+              </tr></thead>
+              <tbody id="tbodyEmpenho"><tr class="skeleton-row"><td colspan="15"></td></tr></tbody>
             </table>
           </div>
-          <div class="pagination" id="paginationOrgaos"></div>
+          <div class="pagination" id="paginationEmpenho"></div>
         </div>
-      </section>
+      </div>
 
-      <!-- Secao: Por Acao -->
-      <section class="section" id="section-acoes">
-        <div class="chart-row">
-          <div class="chart-card">
-            <div class="chart-card-header">
-              <h2 class="chart-title">Top 15 Acoes por Valor Empenhado</h2>
-            </div>
-            <div class="chart-wrap chart-wrap--horizontal chart-wrap--tall">
-              <canvas id="chartAcoes"></canvas>
-            </div>
-          </div>
-        </div>
+      <div class="tab-panel" id="tab-geral">
         <div class="table-card">
-          <div class="table-card-header">
-            <h2 class="table-title">Demonstrativo por Acao</h2>
-            <div class="table-controls">
-              <input type="text" class="search-input" id="searchAcoes" placeholder="Buscar acao..." />
-              <button class="btn-export" data-table="acoes">Exportar CSV</button>
+          <div class="section-banner section-banner--rose">
+            <div class="banner-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+            <div class="banner-text">
+              <span class="banner-title">Dados de Liquidacao e Pagamento (GERALDADOS)</span>
+              <span class="banner-sub">Registros brutos de liquidacao e ordens de pagamento</span>
+            </div>
+            <div class="banner-actions">
+              <input type="text" class="search-input" id="searchGeral" placeholder="Buscar..." />
+              <button class="btn-export" data-table="geral">Exportar CSV</button>
             </div>
           </div>
           <div class="table-wrap">
-            <table class="data-table" id="tableAcoes">
-              <thead>
-                <tr>
-                  <th data-col="acao" class="sortable">Acao</th>
-                  <th data-col="empenhado" class="sortable num">Empenhado</th>
-                  <th data-col="liquidado" class="sortable num">Liquidado</th>
-                  <th data-col="anulado" class="sortable num">Anulado</th>
-                  <th data-col="retido" class="sortable num">Retido</th>
-                  <th data-col="pago" class="sortable num">Pago</th>
-                </tr>
-              </thead>
-              <tbody id="tbodyAcoes"><tr class="skeleton-row"><td colspan="6"></td></tr></tbody>
+            <table class="data-table table-sm" id="tableGeral">
+              <thead><tr>
+                <th class="sortable">Contrato</th>
+                <th class="sortable">Dt. Liquidacao</th>
+                <th class="sortable">Orgao</th>
+                <th class="sortable">Unidade</th>
+                <th class="sortable">Credor</th>
+                <th class="sortable">Tipo Despesa</th>
+                <th class="sortable">Id Empenho</th>
+                <th class="sortable">Id Liquidacao</th>
+                <th class="sortable">Id Ordem Pgto</th>
+                <th class="sortable">Dt. Empenho</th>
+                <th class="sortable">Dt. Pagamento</th>
+                <th class="sortable num">Vl. Empenho</th>
+                <th class="sortable num">Vl. Liquidado</th>
+                <th class="sortable num">Vl. Anulado</th>
+                <th class="sortable num">Vl. Retido</th>
+                <th class="sortable num">Vl. Liquido</th>
+                <th class="sortable">Licitacao</th>
+                <th class="sortable">Acao</th>
+                <th class="sortable">Elemento</th>
+              </tr></thead>
+              <tbody id="tbodyGeral"><tr class="skeleton-row"><td colspan="19"></td></tr></tbody>
             </table>
           </div>
-          <div class="pagination" id="paginationAcoes"></div>
+          <div class="pagination" id="paginationGeral"></div>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <!-- Secao: Por Elemento -->
-      <section class="section" id="section-elementos">
-        <div class="chart-row">
-          <div class="chart-card">
-            <div class="chart-card-header">
-              <h2 class="chart-title">Top 15 Elementos por Valor Empenhado</h2>
-            </div>
-            <div class="chart-wrap chart-wrap--horizontal chart-wrap--tall">
-              <canvas id="chartElementos"></canvas>
-            </div>
-          </div>
-        </div>
-        <div class="table-card">
-          <div class="table-card-header">
-            <h2 class="table-title">Demonstrativo por Elemento</h2>
-            <div class="table-controls">
-              <input type="text" class="search-input" id="searchElementos" placeholder="Buscar elemento..." />
-              <button class="btn-export" data-table="elementos">Exportar CSV</button>
-            </div>
-          </div>
-          <div class="table-wrap">
-            <table class="data-table" id="tableElementos">
-              <thead>
-                <tr>
-                  <th data-col="elemento" class="sortable">Elemento</th>
-                  <th data-col="empenhado" class="sortable num">Empenhado</th>
-                  <th data-col="liquidado" class="sortable num">Liquidado</th>
-                  <th data-col="anulado" class="sortable num">Anulado</th>
-                  <th data-col="retido" class="sortable num">Retido</th>
-                  <th data-col="pago" class="sortable num">Pago</th>
-                </tr>
-              </thead>
-              <tbody id="tbodyElementos"><tr class="skeleton-row"><td colspan="6"></td></tr></tbody>
-            </table>
-          </div>
-          <div class="pagination" id="paginationElementos"></div>
-        </div>
-      </section>
+  </main>
+</div>
 
-      <!-- Secao: Evolucao Mensal -->
-      <section class="section" id="section-mensal">
-        <div class="chart-row">
-          <div class="chart-card">
-            <div class="chart-card-header">
-              <h2 class="chart-title">Progressao Percentual Mensal</h2>
-            </div>
-            <div class="chart-wrap">
-              <canvas id="chartProgressao"></canvas>
-            </div>
-          </div>
-        </div>
-        <div class="table-card">
-          <div class="table-card-header">
-            <h2 class="table-title">Demonstrativo Mensal</h2>
-            <div class="table-controls">
-              <button class="btn-export" data-table="mensal">Exportar CSV</button>
-            </div>
-          </div>
-          <div class="table-wrap">
-            <table class="data-table" id="tableMensal">
-              <thead>
-                <tr>
-                  <th data-col="mes" class="sortable">Mes</th>
-                  <th data-col="empenhado" class="sortable num">Empenhado</th>
-                  <th data-col="liquidado" class="sortable num">Liquidado</th>
-                  <th data-col="anulado" class="sortable num">Anulado</th>
-                  <th data-col="retido" class="sortable num">Retido</th>
-                  <th data-col="pago" class="sortable num">Pago</th>
-                  <th data-col="pctEmpenhado" class="sortable num">% Emp. Acum.</th>
-                  <th data-col="pctPago" class="sortable num">% Pago Acum.</th>
-                </tr>
-              </thead>
-              <tbody id="tbodyMensal"><tr class="skeleton-row"><td colspan="8"></td></tr></tbody>
-            </table>
-          </div>
-          <div class="pagination" id="paginationMensal"></div>
-        </div>
-      </section>
+<!-- Toast de erro global -->
+<div class="error-toast hidden" id="errorToast">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+  <span id="errorMessage">Erro ao carregar dados.</span>
+  <button class="toast-close" id="toastClose">x</button>
+</div>
 
-      <!-- Secao: Dados Brutos -->
-      <section class="section" id="section-brutos">
-        <div class="tabs-bar">
-          <button class="tab-btn active" data-tab="empenho">Empenhos</button>
-          <button class="tab-btn" data-tab="geral">Liquidacoes / Pagamentos</button>
-        </div>
-
-        <!-- Aba Empenhos -->
-        <div class="tab-panel active" id="tab-empenho">
-          <div class="table-card">
-            <div class="table-card-header">
-              <h2 class="table-title">Dados de Empenho (EMPENHODADOS)</h2>
-              <div class="table-controls">
-                <input type="text" class="search-input" id="searchEmpenho" placeholder="Buscar..." />
-                <button class="btn-export" data-table="empenho">Exportar CSV</button>
-              </div>
-            </div>
-            <div class="table-wrap">
-              <table class="data-table table-sm" id="tableEmpenho">
-                <thead>
-                  <tr>
-                    <th class="sortable">Contrato</th>
-                    <th class="sortable">Orgao</th>
-                    <th class="sortable">Unidade</th>
-                    <th class="sortable">Credor</th>
-                    <th class="sortable">Tipo Despesa</th>
-                    <th class="sortable">Id Nota</th>
-                    <th class="sortable">Data Empenho</th>
-                    <th class="sortable num">Vl. Empenho</th>
-                    <th class="sortable num">Vl. Liquidado</th>
-                    <th class="sortable num">Vl. Anulado</th>
-                    <th class="sortable num">Vl. Retido</th>
-                    <th class="sortable num">Vl. Liquido</th>
-                    <th class="sortable">Modalidade</th>
-                    <th class="sortable">Acao</th>
-                    <th class="sortable">Elemento</th>
-                  </tr>
-                </thead>
-                <tbody id="tbodyEmpenho"><tr class="skeleton-row"><td colspan="15"></td></tr></tbody>
-              </table>
-            </div>
-            <div class="pagination" id="paginationEmpenho"></div>
-          </div>
-        </div>
-
-        <!-- Aba Liquidacoes -->
-        <div class="tab-panel" id="tab-geral">
-          <div class="table-card">
-            <div class="table-card-header">
-              <h2 class="table-title">Dados de Liquidacao e Pagamento (GERALDADOS)</h2>
-              <div class="table-controls">
-                <input type="text" class="search-input" id="searchGeral" placeholder="Buscar..." />
-                <button class="btn-export" data-table="geral">Exportar CSV</button>
-              </div>
-            </div>
-            <div class="table-wrap">
-              <table class="data-table table-sm" id="tableGeral">
-                <thead>
-                  <tr>
-                    <th class="sortable">Contrato</th>
-                    <th class="sortable">Dt. Liquidacao</th>
-                    <th class="sortable">Orgao</th>
-                    <th class="sortable">Unidade</th>
-                    <th class="sortable">Credor</th>
-                    <th class="sortable">Tipo Despesa</th>
-                    <th class="sortable">Id Empenho</th>
-                    <th class="sortable">Id Liquidacao</th>
-                    <th class="sortable">Id Ordem Pgto</th>
-                    <th class="sortable">Dt. Empenho</th>
-                    <th class="sortable">Dt. Pagamento</th>
-                    <th class="sortable num">Vl. Empenho</th>
-                    <th class="sortable num">Vl. Liquidado</th>
-                    <th class="sortable num">Vl. Anulado</th>
-                    <th class="sortable num">Vl. Retido</th>
-                    <th class="sortable num">Vl. Liquido</th>
-                    <th class="sortable">Licitacao</th>
-                    <th class="sortable">Acao</th>
-                    <th class="sortable">Elemento</th>
-                  </tr>
-                </thead>
-                <tbody id="tbodyGeral"><tr class="skeleton-row"><td colspan="19"></td></tr></tbody>
-              </table>
-            </div>
-            <div class="pagination" id="paginationGeral"></div>
-          </div>
-        </div>
-      </section>
-
-    </main>
-  </div>
-
-  <!-- Error toast -->
-  <div class="error-toast hidden" id="errorToast">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-    <span id="errorMessage">Erro ao carregar dados.</span>
-    <button class="toast-close" id="toastClose">x</button>
-  </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-  <script type="module" src="assets/js/main.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script type="module" src="assets/js/main.js"></script>
 </body>
 </html>

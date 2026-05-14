@@ -1,19 +1,13 @@
-/* charts.css — contêineres e dimensionamento dos gráficos */
+/* charts.css — dimensionamento dos canvas Chart.js */
 
 .chart-wrap {
-  padding: 20px;
+  padding: 20px 24px;
   position: relative;
   height: 320px;
 }
 
-.chart-wrap--horizontal {
-  height: 380px;
-}
+.chart-wrap--horizontal { height: 380px; }
+.chart-wrap--tall       { height: 520px; }
+.chart-wrap--line       { height: 280px; }
 
-.chart-wrap--tall {
-  height: 520px;
-}
-
-.chart-wrap canvas {
-  max-width: 100%;
-}
+.chart-wrap canvas { max-width: 100%; }
