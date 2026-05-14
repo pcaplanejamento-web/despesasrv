@@ -42,31 +42,62 @@ var GER = {
   ELEMENTO:  18,  // S
 };
 
-function buildDemonstrativo(rows, nameCol, cols) {
-  var keys = uniqueValues(rows, nameCol);
-  return keys.map(function(k) {
-    var emp  = sumIf(rows, nameCol, k, cols.emp);
-    var liq  = sumIf(rows, nameCol, k, cols.liq);
-    var anul = sumIf(rows, nameCol, k, cols.anul);
-    var ret  = sumIf(rows, nameCol, k, cols.ret);
-    var liqL = sumIf(rows, nameCol, k, cols.liqL);
-    var pago = ret + liqL;
-    var obj = { empenhado: emp, liquidado: liq, anulado: anul, retido: ret, pagoLiquido: liqL, pago: pago };
-    obj[cols.keyName] = k;
+// Agrega empenho (EMPENHODADOS) e liquidado/pago (GERALDADOS) por chave comum
+function buildDemonstrativoHibrido(empRows, gerRows, empKeyCol, gerKeyCol, keyName) {
+  // Passagem 1: empenho por chave (EMPENHODADOS col H)
+  var empByKey = {};
+  empRows.forEach(function(r) {
+    var k = String(r[empKeyCol]).trim();
+    if (!k) return;
+    empByKey[k] = (empByKey[k] || 0) + parseNum(r[EMP.VL_EMP]);
+  });
+
+  // Passagem 2: liquidado, anulado, retido, líquido por chave (GERALDADOS)
+  // Liquidado: col M | Anulado: col N | Retido: col O | Líquido: col P
+  var gerByKey = {};
+  gerRows.forEach(function(r) {
+    var k = String(r[gerKeyCol]).trim();
+    if (!k) return;
+    if (!gerByKey[k]) gerByKey[k] = { liq: 0, anul: 0, ret: 0, liqL: 0 };
+    gerByKey[k].liq  += parseNum(r[GER.VL_LIQ]);
+    gerByKey[k].anul += parseNum(r[GER.VL_ANUL]);
+    gerByKey[k].ret  += parseNum(r[GER.VL_RET]);
+    gerByKey[k].liqL += parseNum(r[GER.VL_LIQ_L]);
+  });
+
+  return Object.keys(empByKey).map(function(k) {
+    var g   = gerByKey[k] || { liq: 0, anul: 0, ret: 0, liqL: 0 };
+    var obj = {
+      empenhado:   empByKey[k],
+      liquidado:   g.liq,
+      anulado:     g.anul,
+      retido:      g.ret,
+      pagoLiquido: g.liqL,
+      pago:        g.ret + g.liqL,
+    };
+    obj[keyName] = k;
     return obj;
   });
 }
 
+// KPIs: empenhado de EMPENHODADOS col H; liquidado/pago de GERALDADOS cols M, O, P
 function getKpis() {
-  var rows = getSheetData(Config.ABA_EMPENHO);
-  var emp  = 0, liq = 0, anul = 0, ret = 0, liqL = 0;
-  for (var i = 0; i < rows.length; i++) {
-    emp  += parseNum(rows[i][EMP.VL_EMP]);
-    liq  += parseNum(rows[i][EMP.VL_LIQ]);
-    anul += parseNum(rows[i][EMP.VL_ANUL]);
-    ret  += parseNum(rows[i][EMP.VL_RET]);
-    liqL += parseNum(rows[i][EMP.VL_LIQ_L]);
+  var empRows = getSheetData(Config.ABA_EMPENHO);
+  var gerRows = getSheetData(Config.ABA_GERAL);
+
+  var emp = 0;
+  for (var i = 0; i < empRows.length; i++) {
+    emp += parseNum(empRows[i][EMP.VL_EMP]);
   }
+
+  var liq = 0, anul = 0, ret = 0, liqL = 0;
+  for (var j = 0; j < gerRows.length; j++) {
+    liq  += parseNum(gerRows[j][GER.VL_LIQ]);
+    anul += parseNum(gerRows[j][GER.VL_ANUL]);
+    ret  += parseNum(gerRows[j][GER.VL_RET]);
+    liqL += parseNum(gerRows[j][GER.VL_LIQ_L]);
+  }
+
   var pago = ret + liqL;
   return {
     empenhado:    emp,
@@ -81,24 +112,21 @@ function getKpis() {
 }
 
 function getOrgaos() {
-  var rows = getSheetData(Config.ABA_EMPENHO);
-  return buildDemonstrativo(rows, EMP.ORGAO, {
-    keyName: 'orgao', emp: EMP.VL_EMP, liq: EMP.VL_LIQ, anul: EMP.VL_ANUL, ret: EMP.VL_RET, liqL: EMP.VL_LIQ_L,
-  });
+  var empRows = getSheetData(Config.ABA_EMPENHO);
+  var gerRows = getSheetData(Config.ABA_GERAL);
+  return buildDemonstrativoHibrido(empRows, gerRows, EMP.ORGAO, GER.ORGAO, 'orgao');
 }
 
 function getAcoes() {
-  var rows = getSheetData(Config.ABA_EMPENHO);
-  return buildDemonstrativo(rows, EMP.ACAO, {
-    keyName: 'acao', emp: EMP.VL_EMP, liq: EMP.VL_LIQ, anul: EMP.VL_ANUL, ret: EMP.VL_RET, liqL: EMP.VL_LIQ_L,
-  });
+  var empRows = getSheetData(Config.ABA_EMPENHO);
+  var gerRows = getSheetData(Config.ABA_GERAL);
+  return buildDemonstrativoHibrido(empRows, gerRows, EMP.ACAO, GER.ACAO, 'acao');
 }
 
 function getElementos() {
-  var rows = getSheetData(Config.ABA_EMPENHO);
-  return buildDemonstrativo(rows, EMP.ELEMENTO, {
-    keyName: 'elemento', emp: EMP.VL_EMP, liq: EMP.VL_LIQ, anul: EMP.VL_ANUL, ret: EMP.VL_RET, liqL: EMP.VL_LIQ_L,
-  });
+  var empRows = getSheetData(Config.ABA_EMPENHO);
+  var gerRows = getSheetData(Config.ABA_GERAL);
+  return buildDemonstrativoHibrido(empRows, gerRows, EMP.ELEMENTO, GER.ELEMENTO, 'elemento');
 }
 
 function getMensal() {
