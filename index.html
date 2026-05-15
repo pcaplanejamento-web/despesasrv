@@ -104,6 +104,16 @@
         <div class="kpi-card skeleton kpi-purple"></div>
       </div>
 
+      <div class="filter-bar">
+        <label class="filter-label" for="filterUnidade">
+          <svg class="filter-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+          Filtrar por Unidade:
+        </label>
+        <select class="filter-select" id="filterUnidade" disabled>
+          <option value="">Todas as Unidades</option>
+        </select>
+      </div>
+
       <div class="chart-row">
         <div class="chart-card">
           <div class="section-banner section-banner--blue">
@@ -127,6 +137,45 @@
             </div>
           </div>
           <div class="chart-wrap chart-wrap--line"><canvas id="chartMensalLinha"></canvas></div>
+        </div>
+      </div>
+
+      <div class="chart-row">
+        <div class="chart-card">
+          <div class="section-banner section-banner--blue">
+            <div class="banner-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div>
+            <div class="banner-text">
+              <span class="banner-title">Top 10 Orgaos por Valor Empenhado</span>
+              <span class="banner-sub">Maiores volumes de despesa por unidade gestora</span>
+            </div>
+          </div>
+          <div class="chart-wrap chart-wrap--horizontal"><canvas id="chartPainelOrgaos"></canvas></div>
+        </div>
+      </div>
+
+      <div class="chart-row">
+        <div class="chart-card">
+          <div class="section-banner section-banner--green">
+            <div class="banner-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+            <div class="banner-text">
+              <span class="banner-title">Top 10 Acoes por Valor Empenhado</span>
+              <span class="banner-sub">Acoes com maior volume orcamentario</span>
+            </div>
+          </div>
+          <div class="chart-wrap chart-wrap--horizontal chart-wrap--tall"><canvas id="chartPainelAcoes"></canvas></div>
+        </div>
+      </div>
+
+      <div class="chart-row">
+        <div class="chart-card">
+          <div class="section-banner section-banner--purple">
+            <div class="banner-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg></div>
+            <div class="banner-text">
+              <span class="banner-title">Top 10 Elementos por Valor Empenhado</span>
+              <span class="banner-sub">Natureza de despesa com maior volume</span>
+            </div>
+          </div>
+          <div class="chart-wrap chart-wrap--horizontal chart-wrap--tall"><canvas id="chartPainelElementos"></canvas></div>
         </div>
       </div>
     </section>

@@ -10,7 +10,17 @@ import {
   renderChartAcoes,
   renderChartElementos,
   renderChartProgressao,
+  renderChartPainelOrgaos,
+  renderChartPainelAcoes,
+  renderChartPainelElementos,
 } from './charts.js';
+import {
+  getUnidades,
+  filterByUnidade,
+  computeKpis,
+  computeAgrupado,
+  computeMensal,
+} from './compute.js';
 import {
   initTableOrgaos,    renderTableOrgaos,
   initTableAcoes,     renderTableAcoes,
@@ -111,6 +121,29 @@ function renderCharts(section) {
   appState.rendered.add(section);
 }
 
+/* ── Agrega dados brutos e renderiza gráficos do painel ── */
+function renderPainelCharts(empRows, gerRows) {
+  const mensal = computeMensal(empRows, gerRows);
+  renderChartMensalBarras(mensal.simples);
+  renderChartMensalLinha(mensal.acumulado);
+  renderChartPainelOrgaos(computeAgrupado(empRows, gerRows, 1,  2,  'orgao'));
+  renderChartPainelAcoes(computeAgrupado(empRows, gerRows,  13, 17, 'acao'));
+  renderChartPainelElementos(computeAgrupado(empRows, gerRows, 14, 18, 'elemento'));
+}
+
+function populateUnitFilter(empRows, gerRows) {
+  const sel = document.getElementById('filterUnidade');
+  if (!sel) return;
+  const unidades = getUnidades(empRows, gerRows);
+  unidades.forEach(u => {
+    const opt = document.createElement('option');
+    opt.value = u;
+    opt.textContent = u;
+    sel.appendChild(opt);
+  });
+  sel.disabled = false;
+}
+
 /* ── Prefetch paralelo — dispara tudo ao entrar na página ── */
 function startPrefetch() {
   completedCount = 0;
@@ -120,13 +153,20 @@ function startPrefetch() {
   document.querySelectorAll('.section-error').forEach(el => el.remove());
   setHeaderStatus('Carregando…');
 
+  // Reseta filtro de unidade
+  const sel = document.getElementById('filterUnidade');
+  if (sel) {
+    sel.value = '';
+    sel.disabled = true;
+    while (sel.options.length > 1) sel.remove(1);
+  }
+
   // Grupo 1a: KPIs — independente do mensal para não bloquear o Painel
   api.kpis()
     .then(kpis => {
       appState.data.kpis = kpis;
       appState.loaded.add('painel');
       renderKpis(kpis);
-      if (appState.activeSection === 'painel') renderCharts('painel');
       onGroupComplete();
     })
     .catch(err => onGroupError(err, 'painel'));
@@ -141,7 +181,11 @@ function startPrefetch() {
       appState.data.mensalPct  = mensalData.percentual.filter(ateMesAtual);
       appState.loaded.add('mensal');
       renderTableMensal(appState.data.mensalPct);
-      if (appState.activeSection === 'painel') renderCharts('painel');
+      // Renderiza gráficos mensais diretamente (sem guard de rendered)
+      // para garantir que aparecem mesmo quando KPIs carregaram primeiro
+      renderChartMensalBarras(appState.data.mensal);
+      renderChartMensalLinha(appState.data.mensalAcum);
+      appState.rendered.add('painel'); // marca como renderizado
       if (appState.activeSection === 'mensal') renderCharts('mensal');
       onGroupComplete();
     })
@@ -188,6 +232,8 @@ function startPrefetch() {
       appState.loaded.add('brutos');
       renderTableEmpenho(empenho.rows);
       renderTableGeral(geral.rows);
+      populateUnitFilter(empenho.rows, geral.rows);
+      renderPainelCharts(empenho.rows, geral.rows);
       onGroupComplete();
     })
     .catch(err => onGroupError(err, 'brutos'));
@@ -246,6 +292,21 @@ function initSidebar() {
   });
 }
 
+/* ── Filtro de Unidade ── */
+function initUnitFilter() {
+  document.getElementById('filterUnidade')?.addEventListener('change', e => {
+    const unidade = e.target.value;
+    if (!appState.data.empenhoRows) return;
+    const { empRows, gerRows } = filterByUnidade(
+      appState.data.empenhoRows,
+      appState.data.geralRows,
+      unidade,
+    );
+    renderKpis(unidade ? computeKpis(empRows, gerRows) : appState.data.kpis);
+    renderPainelCharts(empRows, gerRows);
+  });
+}
+
 /* ── Refresh ── */
 function initRefresh() {
   document.getElementById('btnRefresh')?.addEventListener('click', () => {
@@ -271,6 +332,7 @@ function init() {
   initTabs();
   initRefresh();
   initToast();
+  initUnitFilter();
 
   initTableOrgaos();
   initTableAcoes();

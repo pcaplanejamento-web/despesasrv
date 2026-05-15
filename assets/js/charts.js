@@ -47,7 +47,7 @@ function destroyIfExists(id) {
   }
 }
 
-/* ── Barras mensais agrupadas ── */
+/* ── Barras mensais sobrepostas (Emp atrás, Liq no meio, Pago na frente) ── */
 export function renderChartMensalBarras(dados) {
   destroyIfExists('mensalBarras');
   const ctx = document.getElementById('chartMensalBarras');
@@ -59,9 +59,33 @@ export function renderChartMensalBarras(dados) {
     data: {
       labels,
       datasets: [
-        { label: 'Empenhado', data: dados.map(d => d.empenhado), backgroundColor: ALPHA.empenhado },
-        { label: 'Liquidado', data: dados.map(d => d.liquidado), backgroundColor: ALPHA.liquidado },
-        { label: 'Pago',      data: dados.map(d => d.pago),      backgroundColor: ALPHA.pago },
+        {
+          label: 'Empenhado',
+          data: dados.map(d => d.empenhado),
+          backgroundColor: 'rgba(26,60,110,.55)',
+          grouped: false,
+          order: 3,
+          barPercentage: 1.0,
+          categoryPercentage: 0.85,
+        },
+        {
+          label: 'Liquidado',
+          data: dados.map(d => d.liquidado),
+          backgroundColor: 'rgba(37,84,160,.78)',
+          grouped: false,
+          order: 2,
+          barPercentage: 0.68,
+          categoryPercentage: 0.85,
+        },
+        {
+          label: 'Pago',
+          data: dados.map(d => d.pago),
+          backgroundColor: 'rgba(40,167,69,.92)',
+          grouped: false,
+          order: 1,
+          barPercentage: 0.38,
+          categoryPercentage: 0.85,
+        },
       ],
     },
     options: baseOptions(),
@@ -151,6 +175,66 @@ export function renderChartElementos(dados) {
     data: {
       labels,
       datasets: [{ label: 'Empenhado', data: top15.map(d => d.empenhado), backgroundColor: ALPHA.empenhado }],
+    },
+    options: opts,
+  });
+}
+
+/* ── Painel: Órgãos (top 10) ── */
+export function renderChartPainelOrgaos(dados) {
+  destroyIfExists('painelOrgaos');
+  const ctx = document.getElementById('chartPainelOrgaos');
+  if (!ctx) return;
+
+  const top10 = [...dados].sort((a, b) => b.empenhado - a.empenhado).slice(0, 10);
+  const opts = baseOptions('y');
+  opts.plugins.tooltip.callbacks.label = ctx2 => ` Empenhado: ${formatCurrency(ctx2.parsed.x)}`;
+
+  chartInstances.painelOrgaos = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: top10.map(d => truncateLabel(d.orgao, 35)),
+      datasets: [{ label: 'Empenhado', data: top10.map(d => d.empenhado), backgroundColor: ALPHA.empenhado }],
+    },
+    options: opts,
+  });
+}
+
+/* ── Painel: Ações (top 10) ── */
+export function renderChartPainelAcoes(dados) {
+  destroyIfExists('painelAcoes');
+  const ctx = document.getElementById('chartPainelAcoes');
+  if (!ctx) return;
+
+  const top10 = [...dados].sort((a, b) => b.empenhado - a.empenhado).slice(0, 10);
+  const opts = baseOptions('y');
+  opts.plugins.tooltip.callbacks.label = ctx2 => ` Empenhado: ${formatCurrency(ctx2.parsed.x)}`;
+
+  chartInstances.painelAcoes = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: top10.map(d => truncateLabel(d.acao, 45)),
+      datasets: [{ label: 'Empenhado', data: top10.map(d => d.empenhado), backgroundColor: ALPHA.empenhado }],
+    },
+    options: opts,
+  });
+}
+
+/* ── Painel: Elementos (top 10) ── */
+export function renderChartPainelElementos(dados) {
+  destroyIfExists('painelElementos');
+  const ctx = document.getElementById('chartPainelElementos');
+  if (!ctx) return;
+
+  const top10 = [...dados].sort((a, b) => b.empenhado - a.empenhado).slice(0, 10);
+  const opts = baseOptions('y');
+  opts.plugins.tooltip.callbacks.label = ctx2 => ` Empenhado: ${formatCurrency(ctx2.parsed.x)}`;
+
+  chartInstances.painelElementos = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: top10.map(d => truncateLabel(d.elemento, 45)),
+      datasets: [{ label: 'Empenhado', data: top10.map(d => d.empenhado), backgroundColor: ALPHA.empenhado }],
     },
     options: opts,
   });

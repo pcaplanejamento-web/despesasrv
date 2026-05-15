@@ -290,6 +290,64 @@
 }
 
 /* ════════════════════════════════════
+   FILTER BAR (Filtro de Unidade)
+════════════════════════════════════ */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 2px 18px;
+  flex-wrap: wrap;
+}
+
+.filter-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: .8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.filter-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.filter-select {
+  height: 36px;
+  padding: 0 36px 0 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-size: .82rem;
+  font-family: var(--font);
+  cursor: pointer;
+  min-width: 240px;
+  max-width: 440px;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 16px;
+  transition: border-color .15s, box-shadow .15s;
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(67,97,238,.12);
+}
+
+.filter-select:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+/* ════════════════════════════════════
    ESTADO VAZIO
 ════════════════════════════════════ */
 .empty-row td {
