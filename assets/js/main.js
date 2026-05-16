@@ -1,16 +1,16 @@
 // main.js — inicialização, prefetch e roteamento
 // Arquitetura: 2 chamadas HTTP (empenho + geral), toda a computação é client-side
 
-import { SECTION_TITLES, MESES } from './config.js?v=4';
-import { api, clearCache } from './api.js?v=4';
-import { renderKpis } from './kpis.js?v=4';
+import { SECTION_TITLES, MESES } from './config.js?v=5';
+import { api, clearCache } from './api.js?v=5';
+import { renderKpis } from './kpis.js?v=5';
 import {
   renderChartMensalBarras,
   renderChartMensalLinha,
   renderChartOrgaos,
   renderChartDesmembrado,
   renderChartProgressao,
-} from './charts.js?v=4';
+} from './charts.js?v=5';
 import {
   getUnidades,
   filterByUnidade,
@@ -19,7 +19,7 @@ import {
   computeMensal,
   computeDiario,
   parseDDMMYYYY,
-} from './compute.js?v=4';
+} from './compute.js?v=5';
 import {
   initTableOrgaos,    renderTableOrgaos,
   initTableAcoes,     renderTableAcoes,
@@ -28,8 +28,8 @@ import {
   initTableEmpenho,   renderTableEmpenho,
   initTableGeral,     renderTableGeral,
   setRowClickHandler,
-} from './tables.js?v=4';
-import { initDetail, openDetail } from './detail.js?v=4';
+} from './tables.js?v=5';
+import { initDetail, openDetail } from './detail.js?v=5';
 
 /* ── Estado global ── */
 const appState = {
