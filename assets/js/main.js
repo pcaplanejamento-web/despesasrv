@@ -1,16 +1,17 @@
 // main.js — inicialização, prefetch e roteamento
 // Arquitetura: 2 chamadas HTTP (empenho + geral), toda a computação é client-side
 
-import { SECTION_TITLES, MESES } from './config.js?v=7';
-import { api, clearCache } from './api.js?v=7';
-import { renderKpis } from './kpis.js?v=7';
+import { SECTION_TITLES, MESES } from './config.js?v=8';
+import { api, clearCache } from './api.js?v=8';
+import { renderKpis } from './kpis.js?v=8';
 import {
   renderChartMensalBarras,
   renderChartMensalLinha,
   renderChartOrgaos,
   renderChartDesmembrado,
   renderChartProgressao,
-} from './charts.js?v=7';
+  getRenderedYMax,
+} from './charts.js?v=8';
 import {
   getUnidades,
   filterByUnidade,
@@ -19,7 +20,7 @@ import {
   computeMensal,
   computeDiario,
   parseDDMMYYYY,
-} from './compute.js?v=7';
+} from './compute.js?v=8';
 import {
   initTableOrgaos,    renderTableOrgaos,
   initTableAcoes,     renderTableAcoes,
@@ -28,22 +29,80 @@ import {
   initTableEmpenho,   renderTableEmpenho,
   initTableGeral,     renderTableGeral,
   setRowClickHandler,
-} from './tables.js?v=7';
-import { initDetail, openDetail } from './detail.js?v=7';
+} from './tables.js?v=8';
+import { initDetail, openDetail } from './detail.js?v=8';
+
+/* ── Constantes de zoom ── */
+const ZOOM_STEP = 100_000_000; // 100M por passo
+const ZOOM_MIN  = 100_000_000; // Mínimo do eixo Y
 
 /* ── Estado global ── */
 const appState = {
   activeSection: null,
   data: {},
   desmembrado: { tipo: 'acoes', chartType: 'bar' },
-  // Estado independente por gráfico: modo (diario|mensal) + zoom (Y até 200M)
+  // Estado independente por gráfico: modo + yMax + filtro de datas
   charts: {
-    barras: { mode: 'diario', zoom: false },
-    linha:  { mode: 'diario', zoom: false },
+    barras: { mode: 'diario', yMax: null, dateStart: null, dateEnd: null },
+    linha:  { mode: 'diario', yMax: null, dateStart: null, dateEnd: null },
   },
 };
 
 const PAINEL_SUBSECTIONS = new Set(['orgaos', 'acoes', 'elementos', 'mensal']);
+
+/* ── Helpers de filtro de data ── */
+
+/**
+ * Converte string de data em Date local.
+ * Aceita: "dd/mm/yyyy", "d/m/yyyy", "yyyy-mm-dd".
+ * Retorna null se inválida ou incompleta.
+ */
+function parseFlexDate(str) {
+  if (!str) return null;
+  const s = str.trim();
+  // dd/mm/yyyy ou d/m/yyyy
+  let m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (m) {
+    const d = new Date(+m[3], +m[2] - 1, +m[1]);
+    return isNaN(d) ? null : d;
+  }
+  // yyyy-mm-dd
+  m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (m) {
+    const d = new Date(+m[1], +m[2] - 1, +m[3]);
+    return isNaN(d) ? null : d;
+  }
+  return null;
+}
+
+/** Filtra array de dados simples pelo período selecionado no estado do gráfico */
+function applyDateFilter(simples, state, mode) {
+  const start = parseFlexDate(state.dateStart);
+  const end   = parseFlexDate(state.dateEnd);
+  if (!start && !end) return simples;
+  return simples.filter(d => {
+    if (mode === 'diario') {
+      if (start && d.date < start) return false;
+      if (end   && d.date > end)   return false;
+    } else {
+      // mensal — compara apenas o número do mês (1-12)
+      if (start && d.mes < start.getMonth() + 1) return false;
+      if (end   && d.mes > end.getMonth()   + 1) return false;
+    }
+    return true;
+  });
+}
+
+/** Reconstrói campos acumulados (empAcum / liqAcum / pagoAcum) a partir do zero */
+function recomputeAcumulado(filtered) {
+  let accEmp = 0, accLiq = 0, accPago = 0;
+  return filtered.map(d => {
+    accEmp  += d.empenhado || 0;
+    accLiq  += d.liquidado || 0;
+    accPago += d.pago      || 0;
+    return { ...d, empAcum: accEmp, liqAcum: accLiq, pagoAcum: accPago };
+  });
+}
 
 /* ── Utilitários de UI ── */
 function hideLoadingScreen() {
@@ -124,26 +183,30 @@ function openDetailMes(mes) {
 /* ── Gráficos de linha — renderização individual ── */
 function renderChartBarras() {
   const { data } = appState;
-  const { mode, zoom } = appState.charts.barras;
+  const state = appState.charts.barras;
   if (!data.diario || !data.mensal) return;
-  const src = mode === 'diario' ? data.diario.simples : data.mensal.simples;
-  const cb  = mode === 'diario' ? d => openDetailDia(d.data) : d => openDetailMes(d.mes);
-  renderChartMensalBarras(src, cb, mode, zoom);
+  const rawSrc = state.mode === 'diario' ? data.diario.simples : data.mensal.simples;
+  const src = applyDateFilter(rawSrc, state, state.mode);
+  const cb  = state.mode === 'diario' ? d => openDetailDia(d.data) : d => openDetailMes(d.mes);
+  renderChartMensalBarras(src, cb, state.mode, state.yMax);
   const el = document.getElementById('subtitleMensalBarras');
-  if (el) el.textContent = mode === 'diario'
+  if (el) el.textContent = state.mode === 'diario'
     ? 'Comparativo diário — clique num dia para ver o detalhamento'
     : 'Comparativo mensal de execução orçamentária';
 }
 
 function renderChartLinha() {
   const { data } = appState;
-  const { mode, zoom } = appState.charts.linha;
+  const state = appState.charts.linha;
   if (!data.diario || !data.mensal) return;
-  const src = mode === 'diario' ? data.diario.acumulado : data.mensal.acumulado;
-  const cb  = mode === 'diario' ? d => openDetailDia(d.data) : d => openDetailMes(d.mes);
-  renderChartMensalLinha(src, cb, mode, zoom);
+  // Filtra simples e reconstrói acumulado a partir do zero para o período filtrado
+  const rawSimples = state.mode === 'diario' ? data.diario.simples : data.mensal.simples;
+  const filtered   = applyDateFilter(rawSimples, state, state.mode);
+  const src        = recomputeAcumulado(filtered);
+  const cb  = state.mode === 'diario' ? d => openDetailDia(d.data) : d => openDetailMes(d.mes);
+  renderChartMensalLinha(src, cb, state.mode, state.yMax);
   const el = document.getElementById('subtitleMensalLinha');
-  if (el) el.textContent = mode === 'diario'
+  if (el) el.textContent = state.mode === 'diario'
     ? 'Acumulado diário — clique num dia para ver o detalhamento'
     : 'Progressão mensal acumulada de empenho, liquidação e pagamento';
 }
@@ -359,15 +422,14 @@ function initUnitFilter() {
   });
 }
 
-/* ── Controles individuais dos gráficos (Diário/Mensal + Zoom 200M) ── */
+/* ── Controles individuais dos gráficos ── */
 function initChartsControls() {
   // Toggle Diário / Mensal — cada botão tem data-chart="barras"|"linha"
   document.querySelectorAll('[data-tempo][data-chart]').forEach(btn => {
     btn.addEventListener('click', () => {
-      const chart = btn.dataset.chart;   // 'barras' | 'linha'
-      const mode  = btn.dataset.tempo;   // 'diario' | 'mensal'
+      const chart = btn.dataset.chart;
+      const mode  = btn.dataset.tempo;
       if (appState.charts[chart].mode === mode) return;
-      // Atualiza classe active apenas nos botões deste gráfico
       document.querySelectorAll(`[data-tempo][data-chart="${chart}"]`).forEach(b =>
         b.classList.toggle('active', b.dataset.tempo === mode)
       );
@@ -376,13 +438,77 @@ function initChartsControls() {
     });
   });
 
-  // Zoom Y ≤ 200M — data-zoom="barras"|"linha"
-  document.querySelectorAll('[data-zoom]').forEach(btn => {
+  // Zoom in: reduz Y max em ZOOM_STEP (ampliar visualmente)
+  document.querySelectorAll('[data-zoom-in]').forEach(btn => {
     btn.addEventListener('click', () => {
-      const chart = btn.dataset.zoom;
-      const next  = !appState.charts[chart].zoom;
-      appState.charts[chart].zoom = next;
-      btn.classList.toggle('active', next);
+      const chart   = btn.dataset.zoomIn;
+      const state   = appState.charts[chart];
+      const chartId = chart === 'barras' ? 'mensalBarras' : 'mensalLinha';
+      const curMax  = state.yMax ?? getRenderedYMax(chartId) ?? ZOOM_STEP * 4;
+      state.yMax = Math.max(ZOOM_MIN, curMax - ZOOM_STEP);
+      chart === 'barras' ? renderChartBarras() : renderChartLinha();
+    });
+  });
+
+  // Zoom out: aumenta Y max em ZOOM_STEP (ver mais escala)
+  document.querySelectorAll('[data-zoom-out]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const chart   = btn.dataset.zoomOut;
+      const state   = appState.charts[chart];
+      const chartId = chart === 'barras' ? 'mensalBarras' : 'mensalLinha';
+      const curMax  = state.yMax ?? getRenderedYMax(chartId) ?? 0;
+      state.yMax = curMax + ZOOM_STEP;
+      chart === 'barras' ? renderChartBarras() : renderChartLinha();
+    });
+  });
+
+  /** Aplica máscara automática dd/mm/aaaa enquanto o usuário digita números */
+  function applyDateMask(input) {
+    let v = input.value.replace(/\D/g, '').slice(0, 8);
+    if (v.length > 4) v = v.slice(0,2) + '/' + v.slice(2,4) + '/' + v.slice(4);
+    else if (v.length > 2) v = v.slice(0,2) + '/' + v.slice(2);
+    input.value = v;
+  }
+
+  /** Handler genérico para campos de data (início e fim) */
+  function makeDateHandler(stateKey) {
+    return function(input, chart) {
+      const val = input.value.trim();
+      const date = parseFlexDate(val);
+      const valid = !val || !!date;
+      input.classList.toggle('banner-date--invalid', !!val && !date);
+      if (valid) {
+        appState.charts[chart][stateKey] = val || null;
+        chart === 'barras' ? renderChartBarras() : renderChartLinha();
+      }
+    };
+  }
+  const onStartChange = makeDateHandler('dateStart');
+  const onEndChange   = makeDateHandler('dateEnd');
+
+  // Data início
+  document.querySelectorAll('[data-date-start]').forEach(input => {
+    const chart = input.dataset.dateStart;
+    input.addEventListener('input', () => { applyDateMask(input); onStartChange(input, chart); });
+    input.addEventListener('blur',  () => onStartChange(input, chart));
+  });
+
+  // Data fim
+  document.querySelectorAll('[data-date-end]').forEach(input => {
+    const chart = input.dataset.dateEnd;
+    input.addEventListener('input', () => { applyDateMask(input); onEndChange(input, chart); });
+    input.addEventListener('blur',  () => onEndChange(input, chart));
+  });
+
+  // Resetar filtros
+  document.querySelectorAll('[data-reset]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const chart = btn.dataset.reset;
+      appState.charts[chart].yMax      = null;
+      appState.charts[chart].dateStart = null;
+      appState.charts[chart].dateEnd   = null;
+      document.querySelectorAll(`[data-date-start="${chart}"], [data-date-end="${chart}"]`)
+        .forEach(inp => { inp.value = ''; inp.classList.remove('banner-date--invalid'); });
       chart === 'barras' ? renderChartBarras() : renderChartLinha();
     });
   });

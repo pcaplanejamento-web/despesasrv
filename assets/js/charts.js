@@ -145,8 +145,13 @@ function addClickHandler(opts, dados, onClickCb) {
   };
 }
 
+/* ── Retorna o Y máximo renderizado de um gráfico ── */
+export function getRenderedYMax(chartId) {
+  return chartInstances[chartId]?.scales?.y?.max ?? null;
+}
+
 /* ── Empenho × Liquidação × Pagamento — Diário ou Mensal (área) ── */
-export function renderChartMensalBarras(dados, onClickCb, mode = 'diario', zoom = false) {
+export function renderChartMensalBarras(dados, onClickCb, mode = 'diario', yMax = null) {
   destroyIfExists('mensalBarras');
   const ctx = document.getElementById('chartMensalBarras');
   if (!ctx) return;
@@ -160,7 +165,7 @@ export function renderChartMensalBarras(dados, onClickCb, mode = 'diario', zoom 
     opts.scales.x.ticks.maxTicksLimit = 14;
     opts.scales.x.ticks.autoSkip = true;
   }
-  if (zoom) opts.scales.y.max = 200_000_000; // Zoom: Y ≤ 200M
+  if (yMax != null) opts.scales.y.max = yMax;
   addClickHandler(opts, dados, onClickCb);
   chartInstances.mensalBarras = new Chart(ctx, {
     type: 'line',
@@ -178,7 +183,7 @@ export function renderChartMensalBarras(dados, onClickCb, mode = 'diario', zoom 
 }
 
 /* ── Evolução Acumulada — Diária ou Mensal (área) ── */
-export function renderChartMensalLinha(dados, onClickCb, mode = 'diario', zoom = false) {
+export function renderChartMensalLinha(dados, onClickCb, mode = 'diario', yMax = null) {
   destroyIfExists('mensalLinha');
   const ctx = document.getElementById('chartMensalLinha');
   if (!ctx) return;
@@ -192,7 +197,7 @@ export function renderChartMensalLinha(dados, onClickCb, mode = 'diario', zoom =
     opts.scales.x.ticks.maxTicksLimit = 14;
     opts.scales.x.ticks.autoSkip = true;
   }
-  if (zoom) opts.scales.y.max = 200_000_000; // Zoom: Y ≤ 200M
+  if (yMax != null) opts.scales.y.max = yMax;
   addClickHandler(opts, dados, onClickCb);
   chartInstances.mensalLinha = new Chart(ctx, {
     type: 'line',
