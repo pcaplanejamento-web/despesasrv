@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="assets/css/layout.css" />
   <link rel="stylesheet" href="assets/css/components.css" />
   <link rel="stylesheet" href="assets/css/charts.css" />
-  <link rel="stylesheet" href="assets/css/detail.css?v=5" />
+  <link rel="stylesheet" href="assets/css/detail.css?v=6" />
 </head>
 <body>
 
@@ -130,14 +130,26 @@
         </select>
       </div>
 
-      <!-- ── Empenho x Liquidação x Pagamento por Mês ── -->
+      <!-- ── Empenho x Liquidação x Pagamento ── -->
       <div class="chart-row">
         <div class="chart-card">
           <div class="section-banner section-banner--blue">
             <div class="banner-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><polyline points="8 21 12 17 16 21"/></svg></div>
             <div class="banner-text">
-              <span class="banner-title">Empenho × Liquidação × Pagamento por Mês</span>
-              <span class="banner-sub">Comparativo mensal de execução orçamentária</span>
+              <span class="banner-title">Empenho × Liquidação × Pagamento</span>
+              <span class="banner-sub" id="subtitleMensalBarras">Comparativo diário — clique num dia para ver o detalhamento</span>
+            </div>
+            <div class="banner-actions">
+              <div class="chart-type-toggle">
+                <button class="chart-type-btn active" data-tempo="diario">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  Diário
+                </button>
+                <button class="chart-type-btn" data-tempo="mensal">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                  Mensal
+                </button>
+              </div>
             </div>
           </div>
           <div class="chart-wrap"><canvas id="chartMensalBarras"></canvas></div>
@@ -150,8 +162,8 @@
           <div class="section-banner section-banner--indigo">
             <div class="banner-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
             <div class="banner-text">
-              <span class="banner-title">Evolução Acumulada Mensal</span>
-              <span class="banner-sub">Progressão de empenho, liquidação e pagamento</span>
+              <span class="banner-title">Evolução Acumulada</span>
+              <span class="banner-sub" id="subtitleMensalLinha">Acumulado diário — clique num dia para ver o detalhamento</span>
             </div>
           </div>
           <div class="chart-wrap chart-wrap--line"><canvas id="chartMensalLinha"></canvas></div>
@@ -483,6 +495,6 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-<script type="module" src="assets/js/main.js?v=5"></script>
+<script type="module" src="assets/js/main.js?v=6"></script>
 </body>
 </html>

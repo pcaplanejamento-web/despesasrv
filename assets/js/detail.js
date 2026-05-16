@@ -1,6 +1,6 @@
 // detail.js — drawer de detalhamento (linhas de tabela e gráficos)
 
-import { formatCurrency } from './config.js?v=5';
+import { formatCurrency } from './config.js?v=6';
 
 /* ── Colunas do EMPENHODADOS (exibição sem Contrato) ── */
 const EMP_COLS = [

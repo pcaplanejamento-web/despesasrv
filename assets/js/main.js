@@ -1,16 +1,16 @@
 // main.js — inicialização, prefetch e roteamento
 // Arquitetura: 2 chamadas HTTP (empenho + geral), toda a computação é client-side
 
-import { SECTION_TITLES, MESES } from './config.js?v=5';
-import { api, clearCache } from './api.js?v=5';
-import { renderKpis } from './kpis.js?v=5';
+import { SECTION_TITLES, MESES } from './config.js?v=6';
+import { api, clearCache } from './api.js?v=6';
+import { renderKpis } from './kpis.js?v=6';
 import {
   renderChartMensalBarras,
   renderChartMensalLinha,
   renderChartOrgaos,
   renderChartDesmembrado,
   renderChartProgressao,
-} from './charts.js?v=5';
+} from './charts.js?v=6';
 import {
   getUnidades,
   filterByUnidade,
@@ -19,7 +19,7 @@ import {
   computeMensal,
   computeDiario,
   parseDDMMYYYY,
-} from './compute.js?v=5';
+} from './compute.js?v=6';
 import {
   initTableOrgaos,    renderTableOrgaos,
   initTableAcoes,     renderTableAcoes,
@@ -28,14 +28,15 @@ import {
   initTableEmpenho,   renderTableEmpenho,
   initTableGeral,     renderTableGeral,
   setRowClickHandler,
-} from './tables.js?v=5';
-import { initDetail, openDetail } from './detail.js?v=5';
+} from './tables.js?v=6';
+import { initDetail, openDetail } from './detail.js?v=6';
 
 /* ── Estado global ── */
 const appState = {
   activeSection: null,
   data: {},
   desmembrado: { tipo: 'acoes', chartType: 'bar' },
+  tempoMode: 'diario', // 'diario' | 'mensal'
 };
 
 const PAINEL_SUBSECTIONS = new Set(['orgaos', 'acoes', 'elementos', 'mensal']);
@@ -116,6 +117,33 @@ function openDetailMes(mes) {
   });
 }
 
+/* ── Gráficos de linha temporal (diário / mensal) ── */
+function renderChartsTempo() {
+  const { tempoMode, data } = appState;
+  if (!data.diario || !data.mensal) return;
+
+  if (tempoMode === 'diario') {
+    const cb = d => openDetailDia(d.data);
+    renderChartMensalBarras(data.diario.simples,   cb, 'diario');
+    renderChartMensalLinha(data.diario.acumulado,  cb, 'diario');
+  } else {
+    const cb = d => openDetailMes(d.mes);
+    renderChartMensalBarras(data.mensal.simples,   cb, 'mensal');
+    renderChartMensalLinha(data.mensal.acumulado,  cb, 'mensal');
+  }
+
+  // Atualiza subtítulos dos dois gráficos
+  const isD = tempoMode === 'diario';
+  const el1 = document.getElementById('subtitleMensalBarras');
+  const el2 = document.getElementById('subtitleMensalLinha');
+  if (el1) el1.textContent = isD
+    ? 'Comparativo diário — clique num dia para ver o detalhamento'
+    : 'Comparativo mensal de execução orçamentária';
+  if (el2) el2.textContent = isD
+    ? 'Acumulado diário — clique num dia para ver o detalhamento'
+    : 'Progressão mensal acumulada de empenho, liquidação e pagamento';
+}
+
 /* ── Gráfico unificado ── */
 function renderDesmembradoChart() {
   const { tipo, chartType } = appState.desmembrado;
@@ -144,16 +172,15 @@ function renderPainelAll(empRows, gerRows) {
   const acoes    = computeAgrupado(empRows, gerRows, 13, 17, 'acao');
   const elementos= computeAgrupado(empRows, gerRows, 14, 18, 'elemento');
 
+  appState.data.mensal   = mensal;
+  appState.data.diario   = diario;
   appState.data.acoes    = acoes;
   appState.data.elementos= elementos;
 
   renderKpis(kpis);
 
-  const onDiarioClick = d => openDetailDia(d.data);
-  const onMensalClick = d => openDetailMes(d.mes);
-  renderChartMensalBarras(diario.simples,   onDiarioClick);
-  renderChartMensalLinha(diario.acumulado,  onDiarioClick);
-  renderChartProgressao(mensal.percentual,  onMensalClick);
+  renderChartsTempo();
+  renderChartProgressao(mensal.percentual, d => openDetailMes(d.mes));
   renderChartOrgaos(orgaos, d =>
     openDetailByKey(String(d.orgao ?? ''), 1, 2, 'Por Órgão', 'section-banner--blue')
   );
@@ -327,6 +354,21 @@ function initUnitFilter() {
   });
 }
 
+/* ── Toggle Diário / Mensal ── */
+function initTempoToggle() {
+  document.querySelectorAll('[data-tempo]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mode = btn.dataset.tempo;
+      if (mode === appState.tempoMode) return;
+      document.querySelectorAll('[data-tempo]').forEach(b =>
+        b.classList.toggle('active', b.dataset.tempo === mode)
+      );
+      appState.tempoMode = mode;
+      renderChartsTempo();
+    });
+  });
+}
+
 /* ── Gráfico unificado (dropdown + toggle barras/pizza) ── */
 function initDesmembrado() {
   document.getElementById('desmembradoTipo')?.addEventListener('change', e => {
@@ -391,6 +433,7 @@ function init() {
   initTheme();
   initSidebar();
   initTabs();
+  initTempoToggle();
   initDesmembrado();
   initRefresh();
   initToast();

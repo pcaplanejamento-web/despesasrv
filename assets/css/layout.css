@@ -64,8 +64,8 @@
 .nav-link:hover { color: #fff; background: rgba(255,255,255,.07); }
 .nav-link.active {
   color: #fff;
-  background: rgba(67,97,238,.22);
-  border-color: rgba(67,97,238,.30);
+  background: rgba(25,118,210,.28);
+  border-color: rgba(66,165,245,.35);
   font-weight: 600;
 }
 .nav-icon { width: 17px; height: 17px; flex-shrink: 0; opacity: .75; }

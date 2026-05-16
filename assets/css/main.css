@@ -1,57 +1,57 @@
 /* main.css — variáveis globais, reset e tipografia */
 
 :root {
-  /* Identidade institucional */
-  --color-primary:       #1a3c6e;
-  --color-primary-dark:  #122d54;
-  --color-primary-light: #2554a0;
-  --color-accent:        #4361ee;
+  /* Identidade — Material Design Blue/Indigo */
+  --color-primary:       #1976D2; /* Blue 700 */
+  --color-primary-dark:  #1565C0; /* Blue 800 */
+  --color-primary-light: #42A5F5; /* Blue 400 */
+  --color-accent:        #3F51B5; /* Indigo 500 */
 
   /* Superfícies glass */
-  --bg:        #e8ecf4;
-  --surface:   rgba(255,255,255,.72);
-  --surface2:  rgba(248,249,252,.60);
-  --surface3:  rgba(236,238,245,.55);
+  --bg:        #EEF2F8;
+  --surface:   rgba(255,255,255,.75);
+  --surface2:  rgba(248,250,255,.62);
+  --surface3:  rgba(236,241,250,.55);
 
   /* Texto */
-  --text:       #1a1f36;
-  --text-muted: #6b7280;
-  --text-light: #9ca3af;
+  --text:       #1A1F36;
+  --text-muted: #5F6B7A;
+  --text-light: #9EA8B3;
 
   /* Estado */
-  --color-positive: #0ea872;
-  --color-negative: #e11d48;
-  --color-warning:  #f09b0a;
+  --color-positive: #43A047; /* Green 600 */
+  --color-negative: #E53935; /* Red 600 */
+  --color-warning:  #F57C00; /* Amber 700 */
 
   /* Bordas */
-  --border:     rgba(99,110,158,.16);
-  --border-dim: rgba(99,110,158,.10);
+  --border:     rgba(63,81,181,.14);
+  --border-dim: rgba(63,81,181,.08);
 
   /* Glassmorphism */
   --lg-blur:      20px;
   --lg-blur-lg:   32px;
-  --lg-bg:        rgba(255,255,255,.55);
-  --lg-bg-strong: rgba(255,255,255,.82);
-  --lg-border:    rgba(255,255,255,.70);
-  --lg-shadow:    0 8px 28px rgba(67,97,238,.10), 0 2px 8px rgba(15,22,40,.06);
-  --lg-shadow-md: 0 16px 44px rgba(67,97,238,.13), 0 4px 14px rgba(15,22,40,.07);
+  --lg-bg:        rgba(255,255,255,.58);
+  --lg-bg-strong: rgba(255,255,255,.86);
+  --lg-border:    rgba(255,255,255,.72);
+  --lg-shadow:    0 8px 28px rgba(25,118,210,.10), 0 2px 8px rgba(15,22,40,.06);
+  --lg-shadow-md: 0 16px 44px rgba(25,118,210,.13), 0 4px 14px rgba(15,22,40,.07);
   --lg-inset:     inset 0 1px 0 rgba(255,255,255,.95), inset 0 -1px 0 rgba(255,255,255,.15);
 
-  /* Gradientes KPI */
-  --grad-blue:   linear-gradient(145deg, #2c5282, #3d6ea0);
-  --grad-green:  linear-gradient(145deg, #1e6745, #2a8a5e);
-  --grad-amber:  linear-gradient(145deg, #7a5018, #9a6e2a);
-  --grad-rose:   linear-gradient(145deg, #7a2840, #9a4060);
-  --grad-teal:   linear-gradient(145deg, #1e6070, #2a8090);
-  --grad-purple: linear-gradient(145deg, #4a3878, #6a5098);
+  /* Gradientes KPI — Material Design */
+  --grad-blue:   linear-gradient(135deg, #1565C0 0%, #1976D2 100%); /* Empenhado */
+  --grad-green:  linear-gradient(135deg, #2E7D32 0%, #388E3C 100%); /* Liquidado */
+  --grad-teal:   linear-gradient(135deg, #006064 0%, #00838F 100%); /* Pago */
+  --grad-rose:   linear-gradient(135deg, #B71C1C 0%, #C62828 100%); /* Anulado */
+  --grad-amber:  linear-gradient(135deg, #E65100 0%, #F57C00 100%); /* Retido */
+  --grad-purple: linear-gradient(135deg, #4527A0 0%, #6A1B9A 100%); /* % Liq. */
 
-  /* Banners de seção */
-  --banner-blue:   linear-gradient(135deg, #1e4d7a 0%, #2d6898 100%);
-  --banner-green:  linear-gradient(135deg, #1a5c3a 0%, #267a52 100%);
-  --banner-amber:  linear-gradient(135deg, #6a4215 0%, #8a5e28 100%);
-  --banner-rose:   linear-gradient(135deg, #6a2035 0%, #8a3850 100%);
-  --banner-purple: linear-gradient(135deg, #3a2a68 0%, #564288 100%);
-  --banner-indigo: linear-gradient(135deg, #1a3c6e 0%, #2554a0 100%);
+  /* Banners de seção — Material Design */
+  --banner-blue:   linear-gradient(135deg, #1565C0 0%, #1976D2 100%);
+  --banner-green:  linear-gradient(135deg, #2E7D32 0%, #43A047 100%);
+  --banner-amber:  linear-gradient(135deg, #E65100 0%, #F57C00 100%);
+  --banner-rose:   linear-gradient(135deg, #B71C1C 0%, #E53935 100%);
+  --banner-purple: linear-gradient(135deg, #4527A0 0%, #7B1FA2 100%);
+  --banner-indigo: linear-gradient(135deg, #283593 0%, #3949AB 100%);
 
   /* Raios */
   --radius-sm:   12px;
@@ -65,11 +65,11 @@
   --header-h:  64px;
 
   /* Tabela */
-  --th-bg:     rgba(26,60,110,.06);
-  --th-color:  var(--color-primary);
-  --row-even:  rgba(248,249,252,.55);
-  --row-hover: rgba(67,97,238,.06);
-  --total-row: rgba(26,60,110,.08);
+  --th-bg:     rgba(25,118,210,.07);
+  --th-color:  #1565C0;
+  --row-even:  rgba(248,250,255,.55);
+  --row-hover: rgba(63,81,181,.08);
+  --total-row: rgba(25,118,210,.09);
 }
 
 /* ── Modo escuro: sobrescreve variáveis ── */
@@ -94,10 +94,10 @@
   --lg-inset:     inset 0 1px 0 rgba(255,255,255,.06), inset 0 -1px 0 rgba(255,255,255,.02);
 
   --th-bg:    rgba(148,163,184,.07);
-  --th-color: #94a3b8;
+  --th-color: #90CAF9; /* Blue 200 */
   --row-even: rgba(30,41,59,.38);
-  --row-hover: rgba(67,97,238,.13);
-  --total-row: rgba(67,97,238,.12);
+  --row-hover: rgba(63,81,181,.15);
+  --total-row: rgba(25,118,210,.14);
 }
 
 /* ── Reset ── */
@@ -111,9 +111,9 @@ body {
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
   background-image:
-    radial-gradient(ellipse 70% 50% at 15% 20%, rgba(44,82,130,.05) 0%, transparent 60%),
-    radial-gradient(ellipse 55% 45% at 85% 75%, rgba(30,103,69,.04) 0%, transparent 55%),
-    radial-gradient(ellipse 60% 50% at 55% 10%, rgba(74,56,120,.04) 0%, transparent 55%);
+    radial-gradient(ellipse 70% 50% at 15% 20%, rgba(25,118,210,.07) 0%, transparent 60%),
+    radial-gradient(ellipse 55% 45% at 85% 75%, rgba(46,125,50,.05)  0%, transparent 55%),
+    radial-gradient(ellipse 60% 50% at 55% 10%, rgba(63,81,181,.05)  0%, transparent 55%);
   background-attachment: fixed;
 }
 [data-theme="dark"] body {

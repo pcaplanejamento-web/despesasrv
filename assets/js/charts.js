@@ -2,19 +2,22 @@
 
 import { MESES, formatCurrency, formatShort, truncateLabel } from './config.js';
 
-/* ── Paleta primária — tons institucionais ── */
+/* ── Paleta de séries — Material Design, máximo contraste ── */
 const PAL = {
-  navy: { border: '#1a3c6e', gc: ['rgba(26,60,110,0.75)', 'rgba(26,60,110,0.04)'] },
-  blue: { border: '#2d6898', gc: ['rgba(45,104,152,0.65)', 'rgba(45,104,152,0.04)'] },
-  teal: { border: '#1e7a8a', gc: ['rgba(30,122,138,0.55)', 'rgba(30,122,138,0.03)'] },
+  // Empenhado — Blue 800
+  a: { border: '#1565C0', gc: ['rgba(21,101,192,.28)', 'rgba(21,101,192,.01)'] },
+  // Liquidado — Green 800
+  b: { border: '#2E7D32', gc: ['rgba(46,125,50,.25)',  'rgba(46,125,50,.01)']  },
+  // Pago — Deep Orange 800
+  c: { border: '#E65100', gc: ['rgba(230,81,0,.22)',   'rgba(230,81,0,.01)']   },
 };
 
-/* ── Paleta categórica desaturada ── */
+/* ── Paleta categórica — 20 cores MD distintas ── */
 const CAT_COLORS = [
-  '#1a3c6e','#2d6898','#1e7a8a','#1e6745','#7a5018',
-  '#7a2840','#4a3878','#6a4a3a','#2a5a7a','#3a6858',
-  '#5a4a20','#5a2a48','#2a4a8a','#3a6838','#6a3a28',
-  '#4a2a68','#1e5060','#5a4a10','#5a1e30','#2a5050',
+  '#1565C0','#2E7D32','#E65100','#6A1B9A','#00695C',
+  '#AD1457','#0277BD','#558B2F','#283593','#BF360C',
+  '#006064','#F57F17','#4527A0','#1B5E20','#880E4F',
+  '#0D47A1','#33691E','#4E342E','#37474F','#B71C1C',
 ];
 
 /* ── Helpers de cor por tema ── */
@@ -142,20 +145,21 @@ function addClickHandler(opts, dados, onClickCb) {
   };
 }
 
-/* ── Empenho × Liquidação × Pagamento por Dia (área) ── */
-export function renderChartMensalBarras(dados, onClickCb) {
+/* ── Empenho × Liquidação × Pagamento — Diário ou Mensal (área) ── */
+export function renderChartMensalBarras(dados, onClickCb, mode = 'diario') {
   destroyIfExists('mensalBarras');
   const ctx = document.getElementById('chartMensalBarras');
   if (!ctx) return;
-  // Label no eixo X: dd/MM (5 primeiros chars de 'dd/MM/yyyy')
-  const labels = dados.map(d => d.data.slice(0, 5));
+  const labels = mode === 'diario'
+    ? dados.map(d => d.data.slice(0, 5))                         // dd/MM
+    : dados.map(d => MESES[d.mes - 1] ?? `Mês ${d.mes}`);       // Jan, Fev...
   const opts = areaOpts(c => ` ${c.dataset.label}: ${formatCurrency(c.parsed.y)}`);
-  // Tooltip mostra data completa no título
-  opts.plugins.tooltip.callbacks.title = items =>
-    dados[items[0]?.dataIndex]?.data ?? '';
-  // Limita rótulos no eixo X para não sobrecarregar
-  opts.scales.x.ticks.maxTicksLimit = 14;
-  opts.scales.x.ticks.autoSkip = true;
+  if (mode === 'diario') {
+    opts.plugins.tooltip.callbacks.title = items =>
+      dados[items[0]?.dataIndex]?.data ?? '';
+    opts.scales.x.ticks.maxTicksLimit = 14;
+    opts.scales.x.ticks.autoSkip = true;
+  }
   addClickHandler(opts, dados, onClickCb);
   chartInstances.mensalBarras = new Chart(ctx, {
     type: 'line',
@@ -163,26 +167,30 @@ export function renderChartMensalBarras(dados, onClickCb) {
     data: {
       labels,
       datasets: [
-        areaDataset('Empenhado', dados.map(d => d.empenhado), PAL.navy, 3),
-        areaDataset('Liquidado', dados.map(d => d.liquidado), PAL.blue, 2),
-        areaDataset('Pago',      dados.map(d => d.pago),      PAL.teal, 1),
+        areaDataset('Empenhado', dados.map(d => d.empenhado), PAL.a, 3),
+        areaDataset('Liquidado', dados.map(d => d.liquidado), PAL.b, 2),
+        areaDataset('Pago',      dados.map(d => d.pago),      PAL.c, 1),
       ],
     },
     options: opts,
   });
 }
 
-/* ── Evolução Acumulada Diária (área) ── */
-export function renderChartMensalLinha(dados, onClickCb) {
+/* ── Evolução Acumulada — Diária ou Mensal (área) ── */
+export function renderChartMensalLinha(dados, onClickCb, mode = 'diario') {
   destroyIfExists('mensalLinha');
   const ctx = document.getElementById('chartMensalLinha');
   if (!ctx) return;
-  const labels = dados.map(d => d.data.slice(0, 5));
+  const labels = mode === 'diario'
+    ? dados.map(d => d.data.slice(0, 5))
+    : dados.map(d => MESES[d.mes - 1] ?? `Mês ${d.mes}`);
   const opts = areaOpts(c => ` ${c.dataset.label}: ${formatCurrency(c.parsed.y)}`);
-  opts.plugins.tooltip.callbacks.title = items =>
-    dados[items[0]?.dataIndex]?.data ?? '';
-  opts.scales.x.ticks.maxTicksLimit = 14;
-  opts.scales.x.ticks.autoSkip = true;
+  if (mode === 'diario') {
+    opts.plugins.tooltip.callbacks.title = items =>
+      dados[items[0]?.dataIndex]?.data ?? '';
+    opts.scales.x.ticks.maxTicksLimit = 14;
+    opts.scales.x.ticks.autoSkip = true;
+  }
   addClickHandler(opts, dados, onClickCb);
   chartInstances.mensalLinha = new Chart(ctx, {
     type: 'line',
@@ -190,9 +198,9 @@ export function renderChartMensalLinha(dados, onClickCb) {
     data: {
       labels,
       datasets: [
-        areaDataset('Empenhado Acum.', dados.map(d => d.empAcum),  PAL.navy, 3),
-        areaDataset('Liquidado Acum.', dados.map(d => d.liqAcum),  PAL.blue, 2),
-        areaDataset('Pago Acum.',      dados.map(d => d.pagoAcum), PAL.teal, 1),
+        areaDataset('Empenhado Acum.', dados.map(d => d.empAcum),  PAL.a, 3),
+        areaDataset('Liquidado Acum.', dados.map(d => d.liqAcum),  PAL.b, 2),
+        areaDataset('Pago Acum.',      dados.map(d => d.pagoAcum), PAL.c, 1),
       ],
     },
     options: opts,
@@ -224,9 +232,9 @@ export function renderChartProgressao(dados, onClickCb) {
     data: {
       labels,
       datasets: [
-        areaDataset('% Empenhado', dados.map(d => d.pctEmpenhado), PAL.navy, 3),
-        areaDataset('% Liquidado', dados.map(d => d.pctLiquidado), PAL.blue, 2),
-        areaDataset('% Pago',      dados.map(d => d.pctPago),      PAL.teal, 1),
+        areaDataset('% Empenhado', dados.map(d => d.pctEmpenhado), PAL.a, 3),
+        areaDataset('% Liquidado', dados.map(d => d.pctLiquidado), PAL.b, 2),
+        areaDataset('% Pago',      dados.map(d => d.pctPago),      PAL.c, 1),
       ],
     },
     options: opts,
@@ -247,7 +255,7 @@ export function renderChartOrgaos(dados, onClickCb) {
     type: 'bar',
     data: {
       labels,
-      datasets: [{ label: 'Empenhado', data: sorted.map(d => d.empenhado), backgroundColor: PAL.navy.border, borderRadius: 3 }],
+      datasets: [{ label: 'Empenhado', data: sorted.map(d => d.empenhado), backgroundColor: PAL.a.border, borderRadius: 3 }],
     },
     options: opts,
   });
@@ -313,7 +321,7 @@ export function renderChartDesmembrado(dados, keyName, chartType = 'bar', onClic
         datasets: [{
           label: 'Empenhado',
           data: sorted.map(d => d.empenhado),
-          backgroundColor: PAL.blue.border,
+          backgroundColor: PAL.a.border,
           borderRadius: 4,
         }],
       },
