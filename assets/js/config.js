@@ -2,7 +2,7 @@
 
 export const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwJbvOZt52XnnvgrLBVLO9mCgEiC1t9FgaCxiQuzDqVVPQzRqkAOh9E4dEABYlY664-/exec';
 
-export const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutos
+export const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 horas — alinhado com cache do servidor
 
 export const PAGE_SIZE = 50;
 
@@ -13,7 +13,7 @@ export const MESES = [
 
 export const SECTION_TITLES = {
   painel:    'Painel',
-  orgaos:    'Por Orgão',
+  orgaos:    'Por Órgão',
   acoes:     'Por Ação',
   elementos: 'Por Elemento',
   mensal:    'Evolução Mensal',

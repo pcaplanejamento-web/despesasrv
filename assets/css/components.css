@@ -71,6 +71,12 @@
   word-break: break-all;
 }
 
+.kpi-qty {
+  font-size: .73rem;
+  font-weight: 600;
+  opacity: .82;
+  letter-spacing: .02em;
+}
 .kpi-sub { font-size: .78rem; opacity: .75; }
 
 /* ════════════════════════════════════

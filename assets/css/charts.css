@@ -3,11 +3,40 @@
 .chart-wrap {
   padding: 20px 24px;
   position: relative;
-  height: 320px;
+  height: 440px;
 }
 
-.chart-wrap--horizontal { height: 380px; }
-.chart-wrap--tall       { height: 520px; }
-.chart-wrap--line       { height: 280px; }
+.chart-wrap--line       { height: 440px; }
+.chart-wrap--horizontal { height: 420px; }
+.chart-wrap--tall       { height: 560px; }
 
 .chart-wrap canvas { max-width: 100%; }
+
+/* Gráfico unificado com scroll interno (modo barras) */
+.chart-scroll-outer {
+  height: 420px;
+  overflow-y: hidden;
+  position: relative;
+}
+.chart-scroll-outer.is-bar {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0,0,0,.18) transparent;
+}
+.chart-scroll-outer.is-bar::-webkit-scrollbar { width: 5px; }
+.chart-scroll-outer.is-bar::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,.18);
+  border-radius: 4px;
+}
+
+.chart-scroll-inner { position: relative; height: 100%; }
+.chart-scroll-inner canvas { max-width: 100%; }
+
+/* Mobile */
+@media (max-width: 640px) {
+  .chart-wrap              { height: 260px; }
+  .chart-wrap--line        { height: 260px; }
+  .chart-wrap--horizontal  { height: 280px; }
+  .chart-wrap--tall        { height: 340px; }
+  .chart-scroll-outer      { height: 320px; }
+}

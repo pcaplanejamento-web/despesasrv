@@ -29,9 +29,9 @@ function writeCache(key, data) {
   }
 }
 
-// Timeout em ms por rota (rotas pesadas precisam de mais tempo)
-const ROUTE_TIMEOUT = { mensal: 120_000, tabela: 120_000 };
-const DEFAULT_TIMEOUT = 30_000;
+// Todas as rotas leem a planilha inteira — timeout generoso para evitar aborts prematuros
+const ROUTE_TIMEOUT = { tabela: 180_000 };
+const DEFAULT_TIMEOUT = 180_000;
 
 async function fetchRoute(route, params = {}) {
   const key = cacheKey(route, JSON.stringify(params));
@@ -51,6 +51,11 @@ async function fetchRoute(route, params = {}) {
   let resp;
   try {
     resp = await fetch(url.toString(), { signal: controller.signal });
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      throw new Error('Tempo limite excedido. Verifique sua conexão e tente novamente.');
+    }
+    throw err;
   } finally {
     clearTimeout(timer);
   }

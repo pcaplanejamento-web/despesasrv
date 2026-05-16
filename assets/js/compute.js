@@ -63,12 +63,18 @@ export function filterByUnidade(empRows, gerRows, unidade) {
 export function computeKpis(empRows, gerRows) {
   let emp = 0;
   for (const r of empRows) emp += n(r[E.VL_EMP]);
+
   let liq = 0, anul = 0, ret = 0, liqL = 0;
+  let qtdAnulados = 0, qtdRetidos = 0;
   for (const r of gerRows) {
     liq  += n(r[G.VL_LIQ]);
-    anul += n(r[G.VL_ANUL]);
-    ret  += n(r[G.VL_RET]);
+    const a  = n(r[G.VL_ANUL]);
+    const re = n(r[G.VL_RET]);
+    anul += a;
+    ret  += re;
     liqL += n(r[G.VL_LIQ_L]);
+    if (a  > 0) qtdAnulados++;
+    if (re > 0) qtdRetidos++;
   }
   const pago = ret + liqL;
   return {
@@ -76,6 +82,10 @@ export function computeKpis(empRows, gerRows) {
     retido: ret, pagoLiquido: liqL, pago,
     pctLiquidado: emp > 0 ? liq / emp : 0,
     pctPago:      emp > 0 ? pago / emp : 0,
+    qtdEmpenhos:    empRows.length,
+    qtdLiquidacoes: gerRows.length,
+    qtdAnulados,
+    qtdRetidos,
   };
 }
 
