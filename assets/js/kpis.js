@@ -1,6 +1,6 @@
 // kpis.js — renderização dos cards KPI no painel principal
 
-import { formatCurrency, formatPercent } from './config.js?v=6';
+import { formatCurrency, formatPercent } from './config.js?v=7';
 
 const KPI_DEFS = [
   {

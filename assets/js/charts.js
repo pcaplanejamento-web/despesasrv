@@ -146,7 +146,7 @@ function addClickHandler(opts, dados, onClickCb) {
 }
 
 /* ── Empenho × Liquidação × Pagamento — Diário ou Mensal (área) ── */
-export function renderChartMensalBarras(dados, onClickCb, mode = 'diario') {
+export function renderChartMensalBarras(dados, onClickCb, mode = 'diario', zoom = false) {
   destroyIfExists('mensalBarras');
   const ctx = document.getElementById('chartMensalBarras');
   if (!ctx) return;
@@ -160,6 +160,7 @@ export function renderChartMensalBarras(dados, onClickCb, mode = 'diario') {
     opts.scales.x.ticks.maxTicksLimit = 14;
     opts.scales.x.ticks.autoSkip = true;
   }
+  if (zoom) opts.scales.y.max = 200_000_000; // Zoom: Y ≤ 200M
   addClickHandler(opts, dados, onClickCb);
   chartInstances.mensalBarras = new Chart(ctx, {
     type: 'line',
@@ -177,7 +178,7 @@ export function renderChartMensalBarras(dados, onClickCb, mode = 'diario') {
 }
 
 /* ── Evolução Acumulada — Diária ou Mensal (área) ── */
-export function renderChartMensalLinha(dados, onClickCb, mode = 'diario') {
+export function renderChartMensalLinha(dados, onClickCb, mode = 'diario', zoom = false) {
   destroyIfExists('mensalLinha');
   const ctx = document.getElementById('chartMensalLinha');
   if (!ctx) return;
@@ -191,6 +192,7 @@ export function renderChartMensalLinha(dados, onClickCb, mode = 'diario') {
     opts.scales.x.ticks.maxTicksLimit = 14;
     opts.scales.x.ticks.autoSkip = true;
   }
+  if (zoom) opts.scales.y.max = 200_000_000; // Zoom: Y ≤ 200M
   addClickHandler(opts, dados, onClickCb);
   chartInstances.mensalLinha = new Chart(ctx, {
     type: 'line',

@@ -1,16 +1,16 @@
 // main.js — inicialização, prefetch e roteamento
 // Arquitetura: 2 chamadas HTTP (empenho + geral), toda a computação é client-side
 
-import { SECTION_TITLES, MESES } from './config.js?v=6';
-import { api, clearCache } from './api.js?v=6';
-import { renderKpis } from './kpis.js?v=6';
+import { SECTION_TITLES, MESES } from './config.js?v=7';
+import { api, clearCache } from './api.js?v=7';
+import { renderKpis } from './kpis.js?v=7';
 import {
   renderChartMensalBarras,
   renderChartMensalLinha,
   renderChartOrgaos,
   renderChartDesmembrado,
   renderChartProgressao,
-} from './charts.js?v=6';
+} from './charts.js?v=7';
 import {
   getUnidades,
   filterByUnidade,
@@ -19,7 +19,7 @@ import {
   computeMensal,
   computeDiario,
   parseDDMMYYYY,
-} from './compute.js?v=6';
+} from './compute.js?v=7';
 import {
   initTableOrgaos,    renderTableOrgaos,
   initTableAcoes,     renderTableAcoes,
@@ -28,15 +28,19 @@ import {
   initTableEmpenho,   renderTableEmpenho,
   initTableGeral,     renderTableGeral,
   setRowClickHandler,
-} from './tables.js?v=6';
-import { initDetail, openDetail } from './detail.js?v=6';
+} from './tables.js?v=7';
+import { initDetail, openDetail } from './detail.js?v=7';
 
 /* ── Estado global ── */
 const appState = {
   activeSection: null,
   data: {},
   desmembrado: { tipo: 'acoes', chartType: 'bar' },
-  tempoMode: 'diario', // 'diario' | 'mensal'
+  // Estado independente por gráfico: modo (diario|mensal) + zoom (Y até 200M)
+  charts: {
+    barras: { mode: 'diario', zoom: false },
+    linha:  { mode: 'diario', zoom: false },
+  },
 };
 
 const PAINEL_SUBSECTIONS = new Set(['orgaos', 'acoes', 'elementos', 'mensal']);
@@ -117,29 +121,29 @@ function openDetailMes(mes) {
   });
 }
 
-/* ── Gráficos de linha temporal (diário / mensal) ── */
-function renderChartsTempo() {
-  const { tempoMode, data } = appState;
+/* ── Gráficos de linha — renderização individual ── */
+function renderChartBarras() {
+  const { data } = appState;
+  const { mode, zoom } = appState.charts.barras;
   if (!data.diario || !data.mensal) return;
-
-  if (tempoMode === 'diario') {
-    const cb = d => openDetailDia(d.data);
-    renderChartMensalBarras(data.diario.simples,   cb, 'diario');
-    renderChartMensalLinha(data.diario.acumulado,  cb, 'diario');
-  } else {
-    const cb = d => openDetailMes(d.mes);
-    renderChartMensalBarras(data.mensal.simples,   cb, 'mensal');
-    renderChartMensalLinha(data.mensal.acumulado,  cb, 'mensal');
-  }
-
-  // Atualiza subtítulos dos dois gráficos
-  const isD = tempoMode === 'diario';
-  const el1 = document.getElementById('subtitleMensalBarras');
-  const el2 = document.getElementById('subtitleMensalLinha');
-  if (el1) el1.textContent = isD
+  const src = mode === 'diario' ? data.diario.simples : data.mensal.simples;
+  const cb  = mode === 'diario' ? d => openDetailDia(d.data) : d => openDetailMes(d.mes);
+  renderChartMensalBarras(src, cb, mode, zoom);
+  const el = document.getElementById('subtitleMensalBarras');
+  if (el) el.textContent = mode === 'diario'
     ? 'Comparativo diário — clique num dia para ver o detalhamento'
     : 'Comparativo mensal de execução orçamentária';
-  if (el2) el2.textContent = isD
+}
+
+function renderChartLinha() {
+  const { data } = appState;
+  const { mode, zoom } = appState.charts.linha;
+  if (!data.diario || !data.mensal) return;
+  const src = mode === 'diario' ? data.diario.acumulado : data.mensal.acumulado;
+  const cb  = mode === 'diario' ? d => openDetailDia(d.data) : d => openDetailMes(d.mes);
+  renderChartMensalLinha(src, cb, mode, zoom);
+  const el = document.getElementById('subtitleMensalLinha');
+  if (el) el.textContent = mode === 'diario'
     ? 'Acumulado diário — clique num dia para ver o detalhamento'
     : 'Progressão mensal acumulada de empenho, liquidação e pagamento';
 }
@@ -179,7 +183,8 @@ function renderPainelAll(empRows, gerRows) {
 
   renderKpis(kpis);
 
-  renderChartsTempo();
+  renderChartBarras();
+  renderChartLinha();
   renderChartProgressao(mensal.percentual, d => openDetailMes(d.mes));
   renderChartOrgaos(orgaos, d =>
     openDetailByKey(String(d.orgao ?? ''), 1, 2, 'Por Órgão', 'section-banner--blue')
@@ -354,17 +359,31 @@ function initUnitFilter() {
   });
 }
 
-/* ── Toggle Diário / Mensal ── */
-function initTempoToggle() {
-  document.querySelectorAll('[data-tempo]').forEach(btn => {
+/* ── Controles individuais dos gráficos (Diário/Mensal + Zoom 200M) ── */
+function initChartsControls() {
+  // Toggle Diário / Mensal — cada botão tem data-chart="barras"|"linha"
+  document.querySelectorAll('[data-tempo][data-chart]').forEach(btn => {
     btn.addEventListener('click', () => {
-      const mode = btn.dataset.tempo;
-      if (mode === appState.tempoMode) return;
-      document.querySelectorAll('[data-tempo]').forEach(b =>
+      const chart = btn.dataset.chart;   // 'barras' | 'linha'
+      const mode  = btn.dataset.tempo;   // 'diario' | 'mensal'
+      if (appState.charts[chart].mode === mode) return;
+      // Atualiza classe active apenas nos botões deste gráfico
+      document.querySelectorAll(`[data-tempo][data-chart="${chart}"]`).forEach(b =>
         b.classList.toggle('active', b.dataset.tempo === mode)
       );
-      appState.tempoMode = mode;
-      renderChartsTempo();
+      appState.charts[chart].mode = mode;
+      chart === 'barras' ? renderChartBarras() : renderChartLinha();
+    });
+  });
+
+  // Zoom Y ≤ 200M — data-zoom="barras"|"linha"
+  document.querySelectorAll('[data-zoom]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const chart = btn.dataset.zoom;
+      const next  = !appState.charts[chart].zoom;
+      appState.charts[chart].zoom = next;
+      btn.classList.toggle('active', next);
+      chart === 'barras' ? renderChartBarras() : renderChartLinha();
     });
   });
 }
@@ -375,9 +394,10 @@ function initDesmembrado() {
     appState.desmembrado.tipo = e.target.value;
     renderDesmembradoChart();
   });
-  document.querySelectorAll('.chart-type-btn').forEach(btn => {
+  // Escopo apenas nos botões com data-type (barras/pizza do gráfico desmembrado)
+  document.querySelectorAll('[data-type]').forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.chart-type-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('[data-type]').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       appState.desmembrado.chartType = btn.dataset.type;
       renderDesmembradoChart();
@@ -433,7 +453,7 @@ function init() {
   initTheme();
   initSidebar();
   initTabs();
-  initTempoToggle();
+  initChartsControls();
   initDesmembrado();
   initRefresh();
   initToast();

@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="assets/css/layout.css" />
   <link rel="stylesheet" href="assets/css/components.css" />
   <link rel="stylesheet" href="assets/css/charts.css" />
-  <link rel="stylesheet" href="assets/css/detail.css?v=6" />
+  <link rel="stylesheet" href="assets/css/detail.css?v=7" />
 </head>
 <body>
 
@@ -141,13 +141,19 @@
             </div>
             <div class="banner-actions">
               <div class="chart-type-toggle">
-                <button class="chart-type-btn active" data-tempo="diario">
+                <button class="chart-type-btn active" data-tempo="diario" data-chart="barras">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                   Diário
                 </button>
-                <button class="chart-type-btn" data-tempo="mensal">
+                <button class="chart-type-btn" data-tempo="mensal" data-chart="barras">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
                   Mensal
+                </button>
+              </div>
+              <div class="chart-type-toggle">
+                <button class="chart-type-btn" data-zoom="barras" title="Limitar eixo Y em 200M">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+                  200M
                 </button>
               </div>
             </div>
@@ -164,6 +170,24 @@
             <div class="banner-text">
               <span class="banner-title">Evolução Acumulada</span>
               <span class="banner-sub" id="subtitleMensalLinha">Acumulado diário — clique num dia para ver o detalhamento</span>
+            </div>
+            <div class="banner-actions">
+              <div class="chart-type-toggle">
+                <button class="chart-type-btn active" data-tempo="diario" data-chart="linha">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  Diário
+                </button>
+                <button class="chart-type-btn" data-tempo="mensal" data-chart="linha">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                  Mensal
+                </button>
+              </div>
+              <div class="chart-type-toggle">
+                <button class="chart-type-btn" data-zoom="linha" title="Limitar eixo Y em 200M">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+                  200M
+                </button>
+              </div>
             </div>
           </div>
           <div class="chart-wrap chart-wrap--line"><canvas id="chartMensalLinha"></canvas></div>
@@ -495,6 +519,6 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-<script type="module" src="assets/js/main.js?v=6"></script>
+<script type="module" src="assets/js/main.js?v=7"></script>
 </body>
 </html>
