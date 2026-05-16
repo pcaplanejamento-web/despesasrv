@@ -1,6 +1,6 @@
 // charts.js — criação e atualização de todos os gráficos Chart.js
 
-import { MESES, formatCurrency, truncateLabel } from './config.js';
+import { MESES, formatCurrency, formatShort, truncateLabel } from './config.js';
 
 /* ── Paleta primária — tons institucionais ── */
 const PAL = {
@@ -54,7 +54,7 @@ function areaOpts(tooltipLabel) {
         position: 'bottom',
         labels: {
           font: { family: 'Inter', size: 12, weight: '500' },
-          boxWidth: 10, padding: 24,
+          boxWidth: 10, boxHeight: 10, padding: 24,
           usePointStyle: true, pointStyle: 'circle', pointStyleWidth: 10,
           color: tc,
         },
@@ -69,7 +69,10 @@ function areaOpts(tooltipLabel) {
       },
       y: {
         grid: { color: gc, drawBorder: false },
-        ticks: { font: { family: 'Inter', size: 11 }, color: tc },
+        ticks: {
+          font: { family: 'Inter', size: 11 }, color: tc,
+          callback: v => formatShort(v),
+        },
         border: { display: false },
       },
     },
@@ -95,7 +98,10 @@ function hbarOpts() {
     scales: {
       x: {
         grid: { color: gc, drawBorder: false },
-        ticks: { font: { family: 'Inter', size: 11 }, color: tc },
+        ticks: {
+          font: { family: 'Inter', size: 11 }, color: tc,
+          callback: v => formatShort(v),
+        },
         border: { display: false },
       },
       y: {
@@ -259,7 +265,7 @@ export function renderChartDesmembrado(dados, keyName, chartType = 'bar', onClic
           position: 'right',
           labels: {
             font: { family: 'Inter', size: 11, weight: '500' },
-            boxWidth: 10, padding: 12,
+            boxWidth: 10, boxHeight: 10, padding: 12,
             usePointStyle: true, pointStyle: 'circle', pointStyleWidth: 10,
             color: tc,
           },

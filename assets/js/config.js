@@ -41,3 +41,12 @@ export function truncateLabel(str, max = 40) {
   if (!str) return '';
   return str.length > max ? str.slice(0, max) + '…' : str;
 }
+
+export function formatShort(value) {
+  const num = Number(value) || 0;
+  const abs = Math.abs(num);
+  if (abs >= 1_000_000_000) return (num / 1_000_000_000).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + 'B';
+  if (abs >= 1_000_000)     return (num / 1_000_000).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + 'M';
+  if (abs >= 1_000)         return (num / 1_000).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + 'K';
+  return num.toLocaleString('pt-BR', { maximumFractionDigits: 0 });
+}
