@@ -1,26 +1,24 @@
-// main.js — inicialização, prefetch paralelo de todos os dados e roteamento entre seções
+// main.js — inicialização, prefetch e roteamento
+// Arquitetura: 2 chamadas HTTP (empenho + geral), toda a computação é client-side
 
-import { SECTION_TITLES } from './config.js';
-import { api, clearCache } from './api.js';
-import { renderKpis } from './kpis.js';
+import { SECTION_TITLES, MESES } from './config.js?v=4';
+import { api, clearCache } from './api.js?v=4';
+import { renderKpis } from './kpis.js?v=4';
 import {
   renderChartMensalBarras,
   renderChartMensalLinha,
   renderChartOrgaos,
-  renderChartAcoes,
-  renderChartElementos,
+  renderChartDesmembrado,
   renderChartProgressao,
-  renderChartPainelOrgaos,
-  renderChartPainelAcoes,
-  renderChartPainelElementos,
-} from './charts.js';
+} from './charts.js?v=4';
 import {
   getUnidades,
   filterByUnidade,
   computeKpis,
   computeAgrupado,
   computeMensal,
-} from './compute.js';
+  parseDDMMYYYY,
+} from './compute.js?v=4';
 import {
   initTableOrgaos,    renderTableOrgaos,
   initTableAcoes,     renderTableAcoes,
@@ -28,21 +26,24 @@ import {
   initTableMensal,    renderTableMensal,
   initTableEmpenho,   renderTableEmpenho,
   initTableGeral,     renderTableGeral,
-} from './tables.js';
+  setRowClickHandler,
+} from './tables.js?v=4';
+import { initDetail, openDetail } from './detail.js?v=4';
 
 /* ── Estado global ── */
 const appState = {
   activeSection: null,
-  data:     {},
-  loaded:   new Set(), // seções com dados prontos
-  rendered: new Set(), // seções com gráficos renderizados no canvas
+  data: {},
+  desmembrado: { tipo: 'acoes', chartType: 'bar' },
 };
 
-// Grupos de carga — 'mensal' separado de 'painel' para falha isolada
-const LOAD_GROUPS = ['painel', 'mensal', 'orgaos', 'acoes', 'elementos', 'brutos'];
-let completedCount = 0;
+const PAINEL_SUBSECTIONS = new Set(['orgaos', 'acoes', 'elementos', 'mensal']);
 
 /* ── Utilitários de UI ── */
+function hideLoadingScreen() {
+  document.getElementById('loadingScreen')?.classList.add('hidden');
+}
+
 function showError(msg) {
   const toast = document.getElementById('errorToast');
   const msgEl = document.getElementById('errorMessage');
@@ -60,82 +61,94 @@ function setHeaderStatus(text) {
   if (el) el.textContent = text;
 }
 
-/* ── Progresso de carregamento ── */
-function onGroupComplete() {
-  completedCount++;
-  const success = LOAD_GROUPS.filter(g => appState.loaded.has(g)).length;
-  const total   = LOAD_GROUPS.length;
-  if (completedCount >= total) {
-    if (success === total) {
-      setHeaderStatus(`Atualizado em ${new Date().toLocaleString('pt-BR')}`);
-      hideError();
-    } else {
-      setHeaderStatus(`Parcialmente atualizado — ${success} de ${total} seções`);
-    }
-  } else {
-    setHeaderStatus(`Carregando… ${success} de ${total}`);
-  }
+/* ── Helpers de filtragem para o drawer ── */
+
+/** Retorna as linhas filtradas atualmente visíveis no painel. */
+function getCurrent() {
+  return {
+    emp: appState.data.currentEmpRows ?? [],
+    ger: appState.data.currentGerRows ?? [],
+  };
 }
 
-function onGroupError(err, groupName) {
-  console.error('[DespesasPMRV]', groupName, err);
-  if (groupName === 'painel') {
-    showError(`Erro ao carregar dados: ${err.message}`);
-    setHeaderStatus('Erro ao carregar dados');
-  } else {
-    showSectionError(groupName, err.message);
-  }
-  onGroupComplete();
+/**
+ * Abre o drawer filtrando por um valor-chave em colunas específicas de emp/ger.
+ * Elimina a repetição do mesmo padrão em 5 lugares diferentes.
+ */
+function openDetailByKey(key, empColIdx, gerColIdx, sub, bannerClass) {
+  const { emp, ger } = getCurrent();
+  openDetail({
+    title: key,
+    sub,
+    bannerClass,
+    empRows: emp.filter(r => String(r[empColIdx] ?? '') === key),
+    gerRows: ger.filter(r => String(r[gerColIdx] ?? '') === key),
+  });
 }
 
-function showSectionError(groupName, msg) {
-  const el = document.getElementById(`section-${groupName}`);
-  if (!el || el.querySelector('.section-error')) return;
-  const div = document.createElement('div');
-  div.className = 'section-error';
-  div.textContent = `Não foi possível carregar os dados desta seção: ${msg}`;
-  el.prepend(div);
+/** Abre o drawer com todos os registros de um determinado mês. */
+function openDetailMes(mes) {
+  const { emp, ger } = getCurrent();
+  openDetail({
+    title: MESES[(mes ?? 1) - 1] ?? `Mês ${mes}`,
+    sub: 'Detalhes mensais',
+    bannerClass: 'section-banner--amber',
+    empRows: emp.filter(r => parseDDMMYYYY(r[6])?.getMonth() + 1 === mes),
+    gerRows: ger.filter(r => parseDDMMYYYY(r[1])?.getMonth() + 1 === mes),
+  });
 }
 
-/* ── Renderização de gráficos (canvas precisa estar visível) ── */
-function renderCharts(section) {
-  if (appState.rendered.has(section)) return;
-  switch (section) {
-    case 'painel':
-      renderChartMensalBarras(appState.data.mensal ?? []);
-      renderChartMensalLinha(appState.data.mensalAcum ?? []);
-      break;
-    case 'orgaos':
-      if (appState.data.orgaos) renderChartOrgaos(appState.data.orgaos);
-      break;
-    case 'acoes':
-      if (appState.data.acoes) renderChartAcoes(appState.data.acoes);
-      break;
-    case 'elementos':
-      if (appState.data.elementos) renderChartElementos(appState.data.elementos);
-      break;
-    case 'mensal':
-      if (appState.data.mensalPct) renderChartProgressao(appState.data.mensalPct);
-      break;
-  }
-  appState.rendered.add(section);
+/* ── Gráfico unificado ── */
+function renderDesmembradoChart() {
+  const { tipo, chartType } = appState.desmembrado;
+  const dados    = tipo === 'acoes' ? appState.data.acoes : appState.data.elementos;
+  const keyName  = tipo === 'acoes' ? 'acao' : 'elemento';
+  const empIdx   = tipo === 'acoes' ? 13 : 14;
+  const gerIdx   = tipo === 'acoes' ? 17 : 18;
+  const sub      = tipo === 'acoes' ? 'Por Ação' : 'Por Elemento';
+  const banner   = tipo === 'acoes' ? 'section-banner--green' : 'section-banner--purple';
+  if (!dados) return;
+
+  renderChartDesmembrado(dados, keyName, chartType, d =>
+    openDetailByKey(String(d[keyName] ?? ''), empIdx, gerIdx, sub, banner)
+  );
 }
 
-/* ── Agrega dados brutos e renderiza gráficos do painel ── */
-function renderPainelCharts(empRows, gerRows) {
-  const mensal = computeMensal(empRows, gerRows);
-  renderChartMensalBarras(mensal.simples);
-  renderChartMensalLinha(mensal.acumulado);
-  renderChartPainelOrgaos(computeAgrupado(empRows, gerRows, 1,  2,  'orgao'));
-  renderChartPainelAcoes(computeAgrupado(empRows, gerRows,  13, 17, 'acao'));
-  renderChartPainelElementos(computeAgrupado(empRows, gerRows, 14, 18, 'elemento'));
+/* ── Agrega dados brutos e renderiza tudo no painel ── */
+function renderPainelAll(empRows, gerRows) {
+  appState.data.currentEmpRows = empRows;
+  appState.data.currentGerRows = gerRows;
+
+  const kpis     = computeKpis(empRows, gerRows);
+  const mensal   = computeMensal(empRows, gerRows);
+  const orgaos   = computeAgrupado(empRows, gerRows, 1,  2,  'orgao');
+  const acoes    = computeAgrupado(empRows, gerRows, 13, 17, 'acao');
+  const elementos= computeAgrupado(empRows, gerRows, 14, 18, 'elemento');
+
+  appState.data.acoes    = acoes;
+  appState.data.elementos= elementos;
+
+  renderKpis(kpis);
+
+  const onMensalClick = d => openDetailMes(d.mes);
+  renderChartMensalBarras(mensal.simples,   onMensalClick);
+  renderChartMensalLinha(mensal.acumulado,  onMensalClick);
+  renderChartProgressao(mensal.percentual,  onMensalClick);
+  renderChartOrgaos(orgaos, d =>
+    openDetailByKey(String(d.orgao ?? ''), 1, 2, 'Por Órgão', 'section-banner--blue')
+  );
+  renderDesmembradoChart();
+
+  renderTableMensal(mensal.percentual);
+  renderTableOrgaos(orgaos);
+  renderTableAcoes(acoes);
+  renderTableElementos(elementos);
 }
 
 function populateUnitFilter(empRows, gerRows) {
   const sel = document.getElementById('filterUnidade');
   if (!sel) return;
-  const unidades = getUnidades(empRows, gerRows);
-  unidades.forEach(u => {
+  getUnidades(empRows, gerRows).forEach(u => {
     const opt = document.createElement('option');
     opt.value = u;
     opt.textContent = u;
@@ -144,16 +157,52 @@ function populateUnitFilter(empRows, gerRows) {
   sel.disabled = false;
 }
 
-/* ── Prefetch paralelo — dispara tudo ao entrar na página ── */
+/* ── Registra handlers de clique nas linhas das tabelas ── */
+function setupDetailHandlers() {
+  // Tabelas agregadas — o handler apenas extrai a chave (row[0]) e delega
+  setRowClickHandler('tableOrgaos', row =>
+    openDetailByKey(String(row[0] ?? ''), 1, 2, 'Por Órgão', 'section-banner--blue')
+  );
+  setRowClickHandler('tableAcoes', row =>
+    openDetailByKey(String(row[0] ?? ''), 13, 17, 'Por Ação', 'section-banner--green')
+  );
+  setRowClickHandler('tableElementos', row =>
+    openDetailByKey(String(row[0] ?? ''), 14, 18, 'Por Elemento', 'section-banner--purple')
+  );
+
+  // Tabela mensal — row[8] guarda o número do mês (oculto, inserido em tables.js)
+  setRowClickHandler('tableMensal', row => {
+    const mes = Number(row[8]);
+    if (mes >= 1 && mes <= 12) openDetailMes(mes);
+  });
+
+  // Tabelas brutas — busca por contrato (row[0]) em todos os dados
+  const openDetailContrato = (contrato, sub) => {
+    const allEmp = appState.data.empenhoRows ?? [];
+    const allGer = appState.data.geralRows   ?? [];
+    openDetail({
+      title: `Contrato ${contrato}`,
+      sub,
+      bannerClass: 'section-banner--rose',
+      empRows: allEmp.filter(r => String(r[0] ?? '') === contrato),
+      gerRows: allGer.filter(r => String(r[0] ?? '') === contrato),
+    });
+  };
+
+  setRowClickHandler('tableEmpenho', row =>
+    openDetailContrato(String(row[0] ?? ''), 'Dados de Empenho')
+  );
+  setRowClickHandler('tableGeral', row =>
+    openDetailContrato(String(row[0] ?? ''), 'Dados de Liquidação / Pagamento')
+  );
+}
+
+/* ── Prefetch: apenas 2 chamadas HTTP ── */
 function startPrefetch() {
-  completedCount = 0;
-  appState.loaded.clear();
-  appState.rendered.clear();
   appState.data = {};
   document.querySelectorAll('.section-error').forEach(el => el.remove());
   setHeaderStatus('Carregando…');
 
-  // Reseta filtro de unidade
   const sel = document.getElementById('filterUnidade');
   if (sel) {
     sel.value = '';
@@ -161,102 +210,52 @@ function startPrefetch() {
     while (sel.options.length > 1) sel.remove(1);
   }
 
-  // Grupo 1a: KPIs — independente do mensal para não bloquear o Painel
-  api.kpis()
-    .then(kpis => {
-      appState.data.kpis = kpis;
-      appState.loaded.add('painel');
-      renderKpis(kpis);
-      onGroupComplete();
-    })
-    .catch(err => onGroupError(err, 'painel'));
-
-  // Grupo 1b: Mensal — falha isolada não afeta KPIs nem outras seções
-  api.mensal()
-    .then(mensalData => {
-      const mesAtual = new Date().getMonth() + 1;
-      const ateMesAtual = d => d.mes <= mesAtual;
-      appState.data.mensal     = mensalData.simples.filter(ateMesAtual);
-      appState.data.mensalAcum = mensalData.acumulado.filter(ateMesAtual);
-      appState.data.mensalPct  = mensalData.percentual.filter(ateMesAtual);
-      appState.loaded.add('mensal');
-      renderTableMensal(appState.data.mensalPct);
-      // Renderiza gráficos mensais diretamente (sem guard de rendered)
-      // para garantir que aparecem mesmo quando KPIs carregaram primeiro
-      renderChartMensalBarras(appState.data.mensal);
-      renderChartMensalLinha(appState.data.mensalAcum);
-      appState.rendered.add('painel'); // marca como renderizado
-      if (appState.activeSection === 'mensal') renderCharts('mensal');
-      onGroupComplete();
-    })
-    .catch(err => onGroupError(err, 'mensal'));
-
-  // Grupo 2: Por Órgão
-  api.orgaos()
-    .then(dados => {
-      appState.data.orgaos = dados;
-      appState.loaded.add('orgaos');
-      renderTableOrgaos(dados);
-      if (appState.activeSection === 'orgaos') renderCharts('orgaos');
-      onGroupComplete();
-    })
-    .catch(err => onGroupError(err, 'orgaos'));
-
-  // Grupo 3: Por Ação
-  api.acoes()
-    .then(dados => {
-      appState.data.acoes = dados;
-      appState.loaded.add('acoes');
-      renderTableAcoes(dados);
-      if (appState.activeSection === 'acoes') renderCharts('acoes');
-      onGroupComplete();
-    })
-    .catch(err => onGroupError(err, 'acoes'));
-
-  // Grupo 4: Por Elemento
-  api.elementos()
-    .then(dados => {
-      appState.data.elementos = dados;
-      appState.loaded.add('elementos');
-      renderTableElementos(dados);
-      if (appState.activeSection === 'elementos') renderCharts('elementos');
-      onGroupComplete();
-    })
-    .catch(err => onGroupError(err, 'elementos'));
-
-  // Grupo 5: Dados Brutos (empenho + geral)
   Promise.all([api.empenho(), api.geral()])
     .then(([empenho, geral]) => {
       appState.data.empenhoRows = empenho.rows;
       appState.data.geralRows   = geral.rows;
-      appState.loaded.add('brutos');
+
       renderTableEmpenho(empenho.rows);
       renderTableGeral(geral.rows);
       populateUnitFilter(empenho.rows, geral.rows);
-      renderPainelCharts(empenho.rows, geral.rows);
-      onGroupComplete();
+      renderPainelAll(empenho.rows, geral.rows);
+
+      setHeaderStatus(`Atualizado em ${new Date().toLocaleString('pt-BR')}`);
+      hideError();
+      hideLoadingScreen();
     })
-    .catch(err => onGroupError(err, 'brutos'));
+    .catch(err => {
+      console.error('[DespesasPMRV]', err);
+      showError(`Erro ao carregar dados: ${err.message}`);
+      setHeaderStatus('Erro ao carregar dados');
+      hideLoadingScreen();
+    });
 }
 
 /* ── Navegação entre seções ── */
 function navigateTo(section) {
-  if (!section || appState.activeSection === section) return;
+  if (!section) return;
+  const parentSection = PAINEL_SUBSECTIONS.has(section) ? 'painel' : section;
 
-  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  if (parentSection !== appState.activeSection) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.getElementById(`section-${parentSection}`)?.classList.add('active');
+    appState.activeSection = parentSection;
+  }
+
   document.querySelectorAll('.nav-link').forEach(a => a.classList.remove('active'));
-
-  document.getElementById(`section-${section}`)?.classList.add('active');
   document.querySelector(`.nav-link[data-section="${section}"]`)?.classList.add('active');
 
   const titleEl = document.getElementById('headerTitle');
   if (titleEl) titleEl.textContent = SECTION_TITLES[section] ?? section;
 
-  appState.activeSection = section;
   history.pushState({ section }, '', `#${section}`);
 
-  // Dados já prontos: renderizar gráficos (canvas precisa estar visível)
-  if (appState.loaded.has(section)) renderCharts(section);
+  if (PAINEL_SUBSECTIONS.has(section)) {
+    setTimeout(() => {
+      document.getElementById(`painel-${section}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
+  }
 
   closeSidebar();
 }
@@ -274,16 +273,18 @@ function initTabs() {
   });
 }
 
-/* ── Sidebar toggle (mobile) ── */
+/* ── Sidebar toggle ── */
 function closeSidebar() {
   document.getElementById('sidebar')?.classList.remove('open');
+  document.getElementById('menuOverlay')?.classList.remove('open');
 }
 
 function initSidebar() {
   document.getElementById('btnMenu')?.addEventListener('click', () => {
     document.getElementById('sidebar')?.classList.toggle('open');
+    document.getElementById('menuOverlay')?.classList.toggle('open');
   });
-
+  document.getElementById('menuOverlay')?.addEventListener('click', closeSidebar);
   document.querySelectorAll('.nav-link').forEach(link => {
     link.addEventListener('click', e => {
       e.preventDefault();
@@ -302,8 +303,23 @@ function initUnitFilter() {
       appState.data.geralRows,
       unidade,
     );
-    renderKpis(unidade ? computeKpis(empRows, gerRows) : appState.data.kpis);
-    renderPainelCharts(empRows, gerRows);
+    renderPainelAll(empRows, gerRows);
+  });
+}
+
+/* ── Gráfico unificado (dropdown + toggle barras/pizza) ── */
+function initDesmembrado() {
+  document.getElementById('desmembradoTipo')?.addEventListener('change', e => {
+    appState.desmembrado.tipo = e.target.value;
+    renderDesmembradoChart();
+  });
+  document.querySelectorAll('.chart-type-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.chart-type-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      appState.desmembrado.chartType = btn.dataset.type;
+      renderDesmembradoChart();
+    });
   });
 }
 
@@ -326,13 +342,40 @@ function resolveInitialSection() {
   return Object.keys(SECTION_TITLES).includes(hash) ? hash : 'painel';
 }
 
+/* ── Tema claro / escuro ── */
+function initTheme() {
+  const saved = localStorage.getItem('pmrv-theme');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const active = saved ?? (prefersDark ? 'dark' : 'light');
+  if (active === 'dark') document.documentElement.dataset.theme = 'dark';
+
+  document.getElementById('btnTheme')?.addEventListener('click', () => {
+    const isDark = document.documentElement.dataset.theme === 'dark';
+    if (isDark) {
+      delete document.documentElement.dataset.theme;
+      localStorage.setItem('pmrv-theme', 'light');
+    } else {
+      document.documentElement.dataset.theme = 'dark';
+      localStorage.setItem('pmrv-theme', 'dark');
+    }
+    // Re-renderiza gráficos com as novas cores do tema
+    const { currentEmpRows, currentGerRows } = appState.data;
+    if (currentEmpRows && currentGerRows) {
+      renderPainelAll(currentEmpRows, currentGerRows);
+    }
+  });
+}
+
 /* ── Bootstrap ── */
 function init() {
+  initTheme();
   initSidebar();
   initTabs();
+  initDesmembrado();
   initRefresh();
   initToast();
   initUnitFilter();
+  initDetail();
 
   initTableOrgaos();
   initTableAcoes();
@@ -341,12 +384,14 @@ function init() {
   initTableEmpenho();
   initTableGeral();
 
+  setupDetailHandlers();
+
   window.addEventListener('popstate', e => {
     navigateTo(e.state?.section ?? resolveInitialSection());
   });
 
   navigateTo(resolveInitialSection());
-  startPrefetch(); // dispara todos os fetches em paralelo imediatamente
+  startPrefetch();
 }
 
 document.addEventListener('DOMContentLoaded', init);

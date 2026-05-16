@@ -24,7 +24,7 @@ const G = {
   ELEMENTO:18,
 };
 
-function parseDDMMYYYY(str) {
+export function parseDDMMYYYY(str) {
   if (!str) return null;
   const p = String(str).split('/');
   if (p.length !== 3) return null;
@@ -111,49 +111,39 @@ export function computeAgrupado(empRows, gerRows, empKeyIdx, gerKeyIdx, keyName)
 export function computeMensal(empRows, gerRows) {
   const empBucket = {}, liqBucket = {}, pgtoBucket = {};
   let totalEmp = 0;
-  const yearCount = {};
 
   for (const r of empRows) {
     const v = n(r[E.VL_EMP]);
     totalEmp += v;
     const d = parseDDMMYYYY(r[E.DATA_EMP]);
     if (!d) continue;
-    const y = d.getFullYear(), m = d.getMonth() + 1;
-    yearCount[y] = (yearCount[y] || 0) + 1;
-    if (!empBucket[y]) empBucket[y] = {};
-    empBucket[y][m] = (empBucket[y][m] || 0) + v;
+    const m = d.getMonth() + 1;
+    empBucket[m] = (empBucket[m] || 0) + v;
   }
 
   for (const r of gerRows) {
     const dliq = parseDDMMYYYY(r[G.DATA_LIQ]);
     if (dliq) {
-      const y = dliq.getFullYear(), m = dliq.getMonth() + 1;
-      if (!liqBucket[y]) liqBucket[y] = {};
-      if (!liqBucket[y][m]) liqBucket[y][m] = { liq: 0, anul: 0 };
-      liqBucket[y][m].liq  += n(r[G.VL_LIQ]);
-      liqBucket[y][m].anul += n(r[G.VL_ANUL]);
+      const m = dliq.getMonth() + 1;
+      if (!liqBucket[m]) liqBucket[m] = { liq: 0, anul: 0 };
+      liqBucket[m].liq  += n(r[G.VL_LIQ]);
+      liqBucket[m].anul += n(r[G.VL_ANUL]);
     }
     const dpgto = parseDDMMYYYY(r[G.DATA_PGTO]);
     if (dpgto) {
-      const y = dpgto.getFullYear(), m = dpgto.getMonth() + 1;
-      if (!pgtoBucket[y]) pgtoBucket[y] = {};
-      if (!pgtoBucket[y][m]) pgtoBucket[y][m] = { ret: 0, liqL: 0 };
-      pgtoBucket[y][m].ret  += n(r[G.VL_RET]);
-      pgtoBucket[y][m].liqL += n(r[G.VL_LIQ_L]);
+      const m = dpgto.getMonth() + 1;
+      if (!pgtoBucket[m]) pgtoBucket[m] = { ret: 0, liqL: 0 };
+      pgtoBucket[m].ret  += n(r[G.VL_RET]);
+      pgtoBucket[m].liqL += n(r[G.VL_LIQ_L]);
     }
   }
-
-  const years = Object.keys(yearCount);
-  const anoExercicio = years.length
-    ? +years.reduce((a, b) => (yearCount[+a] >= yearCount[+b] ? a : b))
-    : new Date().getFullYear();
 
   const mesAtual = new Date().getMonth() + 1;
   const simples = [];
   for (let mes = 1; mes <= mesAtual; mes++) {
-    const emp  = empBucket[anoExercicio]?.[mes]  || 0;
-    const liqD = liqBucket[anoExercicio]?.[mes]  || { liq: 0, anul: 0 };
-    const pgD  = pgtoBucket[anoExercicio]?.[mes] || { ret: 0, liqL: 0 };
+    const emp  = empBucket[mes]  || 0;
+    const liqD = liqBucket[mes]  || { liq: 0, anul: 0 };
+    const pgD  = pgtoBucket[mes] || { ret: 0, liqL: 0 };
     simples.push({
       mes, empenhado: emp, liquidado: liqD.liq, anulado: liqD.anul,
       retido: pgD.ret, pagoLiquido: pgD.liqL, pago: pgD.ret + pgD.liqL,

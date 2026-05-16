@@ -11,8 +11,15 @@
   <link rel="stylesheet" href="assets/css/layout.css" />
   <link rel="stylesheet" href="assets/css/components.css" />
   <link rel="stylesheet" href="assets/css/charts.css" />
+  <link rel="stylesheet" href="assets/css/detail.css?v=4" />
 </head>
 <body>
+
+<!-- ═══════════════ LOADING BANNER ═══════════════ -->
+<div class="loading-banner" id="loadingScreen">
+  <div class="loading-banner-spinner"></div>
+  <span class="loading-banner-text">Carregando dados orçamentários…</span>
+</div>
 
 <!-- Overlay mobile -->
 <div class="menu-overlay" id="menuOverlay"></div>
@@ -85,6 +92,12 @@
       <span class="header-update" id="headerUpdate">Carregando...</span>
     </div>
     <div class="header-actions">
+      <button class="btn-theme" id="btnTheme" title="Alternar tema claro/escuro" aria-label="Alternar tema">
+        <!-- ícone de lua (aparece no light mode para indicar "trocar para dark") -->
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <!-- ícone de sol (aparece no dark mode para indicar "trocar para light") -->
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
       <button class="btn-refresh" id="btnRefresh" title="Atualizar dados">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
       </button>
@@ -93,8 +106,10 @@
 
   <main class="main-content" id="mainContent">
 
-    <!-- ══ PAINEL ══ -->
+    <!-- ══ PAINEL (inclui Órgão, Ação, Elemento, Mensal) ══ -->
     <section class="section active" id="section-painel">
+
+      <!-- KPIs -->
       <div class="kpi-grid" id="kpiGrid">
         <div class="kpi-card skeleton kpi-blue"></div>
         <div class="kpi-card skeleton kpi-green"></div>
@@ -104,6 +119,7 @@
         <div class="kpi-card skeleton kpi-purple"></div>
       </div>
 
+      <!-- Filtro de Unidade -->
       <div class="filter-bar">
         <label class="filter-label" for="filterUnidade">
           <svg class="filter-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
@@ -114,80 +130,43 @@
         </select>
       </div>
 
+      <!-- ── Empenho x Liquidação x Pagamento por Mês ── -->
       <div class="chart-row">
         <div class="chart-card">
           <div class="section-banner section-banner--blue">
             <div class="banner-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><polyline points="8 21 12 17 16 21"/></svg></div>
             <div class="banner-text">
-              <span class="banner-title">Empenho x Liquidacao x Pagamento por Mes</span>
-              <span class="banner-sub">Comparativo mensal de execucao orcamentaria</span>
+              <span class="banner-title">Empenho × Liquidação × Pagamento por Mês</span>
+              <span class="banner-sub">Comparativo mensal de execução orçamentária</span>
             </div>
           </div>
           <div class="chart-wrap"><canvas id="chartMensalBarras"></canvas></div>
         </div>
       </div>
 
+      <!-- ── Evolução Acumulada ── -->
       <div class="chart-row">
         <div class="chart-card">
           <div class="section-banner section-banner--indigo">
             <div class="banner-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
             <div class="banner-text">
-              <span class="banner-title">Evolucao Acumulada Mensal</span>
-              <span class="banner-sub">Progressao de empenho, liquidacao e pagamento</span>
+              <span class="banner-title">Evolução Acumulada Mensal</span>
+              <span class="banner-sub">Progressão de empenho, liquidação e pagamento</span>
             </div>
           </div>
           <div class="chart-wrap chart-wrap--line"><canvas id="chartMensalLinha"></canvas></div>
         </div>
       </div>
 
+      <!-- ══ ÂNCORA: Por Órgão ══ -->
+      <div id="painel-orgaos"></div>
+
       <div class="chart-row">
         <div class="chart-card">
           <div class="section-banner section-banner--blue">
             <div class="banner-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div>
             <div class="banner-text">
-              <span class="banner-title">Top 10 Orgaos por Valor Empenhado</span>
-              <span class="banner-sub">Maiores volumes de despesa por unidade gestora</span>
-            </div>
-          </div>
-          <div class="chart-wrap chart-wrap--horizontal"><canvas id="chartPainelOrgaos"></canvas></div>
-        </div>
-      </div>
-
-      <div class="chart-row">
-        <div class="chart-card">
-          <div class="section-banner section-banner--green">
-            <div class="banner-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
-            <div class="banner-text">
-              <span class="banner-title">Top 10 Acoes por Valor Empenhado</span>
-              <span class="banner-sub">Acoes com maior volume orcamentario</span>
-            </div>
-          </div>
-          <div class="chart-wrap chart-wrap--horizontal chart-wrap--tall"><canvas id="chartPainelAcoes"></canvas></div>
-        </div>
-      </div>
-
-      <div class="chart-row">
-        <div class="chart-card">
-          <div class="section-banner section-banner--purple">
-            <div class="banner-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg></div>
-            <div class="banner-text">
-              <span class="banner-title">Top 10 Elementos por Valor Empenhado</span>
-              <span class="banner-sub">Natureza de despesa com maior volume</span>
-            </div>
-          </div>
-          <div class="chart-wrap chart-wrap--horizontal chart-wrap--tall"><canvas id="chartPainelElementos"></canvas></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ══ POR ORGAO ══ -->
-    <section class="section" id="section-orgaos">
-      <div class="chart-row">
-        <div class="chart-card">
-          <div class="section-banner section-banner--blue">
-            <div class="banner-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div>
-            <div class="banner-text">
-              <span class="banner-title">Top 10 Orgaos por Valor Empenhado</span>
+              <span class="banner-title">Órgãos por Valor Empenhado</span>
               <span class="banner-sub">Maiores volumes de despesa por unidade gestora</span>
             </div>
           </div>
@@ -198,18 +177,18 @@
         <div class="section-banner section-banner--indigo">
           <div class="banner-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></div>
           <div class="banner-text">
-            <span class="banner-title">Demonstrativo por Orgao</span>
-            <span class="banner-sub">Empenho, liquidacao, anulado, retido e pago</span>
+            <span class="banner-title">Demonstrativo por Órgão</span>
+            <span class="banner-sub">Empenho, liquidação, anulado, retido e pago</span>
           </div>
           <div class="banner-actions">
-            <input type="text" class="search-input" id="searchOrgaos" placeholder="Buscar orgao..." />
+            <input type="text" class="search-input" id="searchOrgaos" placeholder="Buscar órgão..." />
             <button class="btn-export" data-table="orgaos">Exportar CSV</button>
           </div>
         </div>
         <div class="table-wrap">
           <table class="data-table" id="tableOrgaos">
             <thead><tr>
-              <th data-col="orgao" class="sortable">Orgao</th>
+              <th data-col="orgao" class="sortable">Órgão</th>
               <th data-col="empenhado" class="sortable num">Empenhado</th>
               <th data-col="liquidado" class="sortable num">Liquidado</th>
               <th data-col="anulado" class="sortable num">Anulado</th>
@@ -221,38 +200,65 @@
         </div>
         <div class="pagination" id="paginationOrgaos"></div>
       </div>
-    </section>
 
-    <!-- ══ POR ACAO ══ -->
-    <section class="section" id="section-acoes">
+      <!-- ══ ÂNCORA: Por Ação ══ -->
+      <div id="painel-acoes"></div>
+
+      <!-- ── Gráfico unificado: Ação / Elemento ── -->
       <div class="chart-row">
         <div class="chart-card">
           <div class="section-banner section-banner--green">
-            <div class="banner-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+            <div class="banner-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+            </div>
             <div class="banner-text">
-              <span class="banner-title">Top 15 Acoes por Valor Empenhado</span>
-              <span class="banner-sub">Acoes com maior volume orcamentario</span>
+              <div class="banner-title-row">
+                <span class="banner-title">Distribuição por</span>
+                <select class="banner-select" id="desmembradoTipo">
+                  <option value="acoes">Ação</option>
+                  <option value="elementos">Elemento</option>
+                </select>
+              </div>
+              <span class="banner-sub">Maiores volumes orçamentários por categoria</span>
+            </div>
+            <div class="banner-actions">
+              <div class="chart-type-toggle">
+                <button class="chart-type-btn active" data-type="bar">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                  Barras
+                </button>
+                <button class="chart-type-btn" data-type="pie">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+                  Pizza
+                </button>
+              </div>
             </div>
           </div>
-          <div class="chart-wrap chart-wrap--horizontal chart-wrap--tall"><canvas id="chartAcoes"></canvas></div>
+          <div class="chart-scroll-outer" id="desmembradoScrollOuter">
+            <div class="chart-scroll-inner" id="desmembradoScrollInner">
+              <canvas id="chartDesmembrado"></canvas>
+            </div>
+          </div>
         </div>
       </div>
+
+      <!-- Tabela de Ações -->
       <div class="table-card">
         <div class="section-banner section-banner--green">
           <div class="banner-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></div>
           <div class="banner-text">
-            <span class="banner-title">Demonstrativo por Acao</span>
-            <span class="banner-sub">Execucao orcamentaria por acao governamental</span>
+            <span class="banner-title">Demonstrativo por Ação</span>
+            <span class="banner-sub">Execução orçamentária por ação governamental</span>
           </div>
           <div class="banner-actions">
-            <input type="text" class="search-input" id="searchAcoes" placeholder="Buscar acao..." />
+            <input type="text" class="search-input" id="searchAcoes" placeholder="Buscar ação..." />
             <button class="btn-export" data-table="acoes">Exportar CSV</button>
           </div>
         </div>
         <div class="table-wrap">
           <table class="data-table" id="tableAcoes">
             <thead><tr>
-              <th data-col="acao" class="sortable">Acao</th>
+              <th data-col="acao" class="sortable">Ação</th>
               <th data-col="empenhado" class="sortable num">Empenhado</th>
               <th data-col="liquidado" class="sortable num">Liquidado</th>
               <th data-col="anulado" class="sortable num">Anulado</th>
@@ -264,22 +270,11 @@
         </div>
         <div class="pagination" id="paginationAcoes"></div>
       </div>
-    </section>
 
-    <!-- ══ POR ELEMENTO ══ -->
-    <section class="section" id="section-elementos">
-      <div class="chart-row">
-        <div class="chart-card">
-          <div class="section-banner section-banner--purple">
-            <div class="banner-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg></div>
-            <div class="banner-text">
-              <span class="banner-title">Top 15 Elementos por Valor Empenhado</span>
-              <span class="banner-sub">Natureza de despesa com maior volume</span>
-            </div>
-          </div>
-          <div class="chart-wrap chart-wrap--horizontal chart-wrap--tall"><canvas id="chartElementos"></canvas></div>
-        </div>
-      </div>
+      <!-- ══ ÂNCORA: Por Elemento ══ -->
+      <div id="painel-elementos"></div>
+
+      <!-- Tabela de Elementos -->
       <div class="table-card">
         <div class="section-banner section-banner--purple">
           <div class="banner-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></div>
@@ -307,17 +302,17 @@
         </div>
         <div class="pagination" id="paginationElementos"></div>
       </div>
-    </section>
 
-    <!-- ══ EVOLUCAO MENSAL ══ -->
-    <section class="section" id="section-mensal">
+      <!-- ══ ÂNCORA: Evolução Mensal ══ -->
+      <div id="painel-mensal"></div>
+
       <div class="chart-row">
         <div class="chart-card">
           <div class="section-banner section-banner--amber">
             <div class="banner-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
             <div class="banner-text">
-              <span class="banner-title">Progressao Percentual Mensal</span>
-              <span class="banner-sub">Evolucao acumulada em relacao ao total empenhado</span>
+              <span class="banner-title">Progressão Percentual Mensal</span>
+              <span class="banner-sub">Evolução acumulada em relação ao total empenhado</span>
             </div>
           </div>
           <div class="chart-wrap"><canvas id="chartProgressao"></canvas></div>
@@ -337,7 +332,7 @@
         <div class="table-wrap">
           <table class="data-table" id="tableMensal">
             <thead><tr>
-              <th data-col="mes" class="sortable">Mes</th>
+              <th data-col="mes" class="sortable">Mês</th>
               <th data-col="empenhado" class="sortable num">Empenhado</th>
               <th data-col="liquidado" class="sortable num">Liquidado</th>
               <th data-col="anulado" class="sortable num">Anulado</th>
@@ -351,13 +346,14 @@
         </div>
         <div class="pagination" id="paginationMensal"></div>
       </div>
+
     </section>
 
     <!-- ══ DADOS BRUTOS ══ -->
     <section class="section" id="section-brutos">
       <div class="tabs-bar">
         <button class="tab-btn active" data-tab="empenho">Empenhos</button>
-        <button class="tab-btn" data-tab="geral">Liquidacoes / Pagamentos</button>
+        <button class="tab-btn" data-tab="geral">Liquidações / Pagamentos</button>
       </div>
 
       <div class="tab-panel active" id="tab-empenho">
@@ -366,7 +362,7 @@
             <div class="banner-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
             <div class="banner-text">
               <span class="banner-title">Dados de Empenho (EMPENHODADOS)</span>
-              <span class="banner-sub">Registros brutos de empenho orcamentario</span>
+              <span class="banner-sub">Registros brutos de empenho orçamentário</span>
             </div>
             <div class="banner-actions">
               <input type="text" class="search-input" id="searchEmpenho" placeholder="Buscar..." />
@@ -377,7 +373,7 @@
             <table class="data-table table-sm" id="tableEmpenho">
               <thead><tr>
                 <th class="sortable">Contrato</th>
-                <th class="sortable">Orgao</th>
+                <th class="sortable">Órgão</th>
                 <th class="sortable">Unidade</th>
                 <th class="sortable">Credor</th>
                 <th class="sortable">Tipo Despesa</th>
@@ -387,9 +383,9 @@
                 <th class="sortable num">Vl. Liquidado</th>
                 <th class="sortable num">Vl. Anulado</th>
                 <th class="sortable num">Vl. Retido</th>
-                <th class="sortable num">Vl. Liquido</th>
+                <th class="sortable num">Vl. Líquido</th>
                 <th class="sortable">Modalidade</th>
-                <th class="sortable">Acao</th>
+                <th class="sortable">Ação</th>
                 <th class="sortable">Elemento</th>
               </tr></thead>
               <tbody id="tbodyEmpenho"><tr class="skeleton-row"><td colspan="15"></td></tr></tbody>
@@ -404,8 +400,8 @@
           <div class="section-banner section-banner--rose">
             <div class="banner-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
             <div class="banner-text">
-              <span class="banner-title">Dados de Liquidacao e Pagamento (GERALDADOS)</span>
-              <span class="banner-sub">Registros brutos de liquidacao e ordens de pagamento</span>
+              <span class="banner-title">Dados de Liquidação e Pagamento (GERALDADOS)</span>
+              <span class="banner-sub">Registros brutos de liquidação e ordens de pagamento</span>
             </div>
             <div class="banner-actions">
               <input type="text" class="search-input" id="searchGeral" placeholder="Buscar..." />
@@ -416,13 +412,13 @@
             <table class="data-table table-sm" id="tableGeral">
               <thead><tr>
                 <th class="sortable">Contrato</th>
-                <th class="sortable">Dt. Liquidacao</th>
-                <th class="sortable">Orgao</th>
+                <th class="sortable">Dt. Liquidação</th>
+                <th class="sortable">Órgão</th>
                 <th class="sortable">Unidade</th>
                 <th class="sortable">Credor</th>
                 <th class="sortable">Tipo Despesa</th>
                 <th class="sortable">Id Empenho</th>
-                <th class="sortable">Id Liquidacao</th>
+                <th class="sortable">Id Liquidação</th>
                 <th class="sortable">Id Ordem Pgto</th>
                 <th class="sortable">Dt. Empenho</th>
                 <th class="sortable">Dt. Pagamento</th>
@@ -430,9 +426,9 @@
                 <th class="sortable num">Vl. Liquidado</th>
                 <th class="sortable num">Vl. Anulado</th>
                 <th class="sortable num">Vl. Retido</th>
-                <th class="sortable num">Vl. Liquido</th>
-                <th class="sortable">Licitacao</th>
-                <th class="sortable">Acao</th>
+                <th class="sortable num">Vl. Líquido</th>
+                <th class="sortable">Licitação</th>
+                <th class="sortable">Ação</th>
                 <th class="sortable">Elemento</th>
               </tr></thead>
               <tbody id="tbodyGeral"><tr class="skeleton-row"><td colspan="19"></td></tr></tbody>
@@ -446,6 +442,39 @@
   </main>
 </div>
 
+<!-- ═══════════════ DETAIL DRAWER ═══════════════ -->
+<div class="detail-overlay" id="detailOverlay"></div>
+<div class="detail-drawer" id="detailDrawer" role="dialog" aria-modal="true" aria-label="Detalhamento">
+  <div class="detail-panel" id="detailPanel">
+    <div class="detail-handle" aria-hidden="true"></div>
+
+    <!-- Banner colorido (classe trocada dinamicamente) -->
+    <div class="section-banner section-banner--indigo" id="detailBanner">
+      <div class="banner-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      </div>
+      <div class="banner-text">
+        <span class="banner-title" id="detailTitle"></span>
+        <span class="banner-sub" id="detailSub"></span>
+      </div>
+      <div class="banner-actions">
+        <span class="detail-count" id="detailCount"></span>
+        <button class="btn-export" id="detailExport">Exportar CSV</button>
+        <button class="detail-close" id="detailClose" aria-label="Fechar detalhes">&times;</button>
+      </div>
+    </div>
+
+    <!-- Tabs: Empenhos / Liquidações -->
+    <div class="detail-tabs">
+      <button class="detail-tab-btn active" data-detail-tab="empenho">Empenhos</button>
+      <button class="detail-tab-btn" data-detail-tab="geral">Liquidações / Pagamentos</button>
+    </div>
+
+    <!-- Conteúdo da aba ativa -->
+    <div class="detail-content" id="detailContent"></div>
+  </div>
+</div>
+
 <!-- Toast de erro global -->
 <div class="error-toast hidden" id="errorToast">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
@@ -454,6 +483,6 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-<script type="module" src="assets/js/main.js"></script>
+<script type="module" src="assets/js/main.js?v=4"></script>
 </body>
 </html>
