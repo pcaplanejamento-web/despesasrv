@@ -118,6 +118,64 @@ export function computeAgrupado(empRows, gerRows, empKeyIdx, gerKeyIdx, keyName)
   });
 }
 
+export function computeDiario(empRows, gerRows) {
+  const empByDay = {};
+  for (const r of empRows) {
+    const key = String(r[E.DATA_EMP] ?? '').trim();
+    if (!key) continue;
+    empByDay[key] = (empByDay[key] || 0) + n(r[E.VL_EMP]);
+  }
+
+  const liqByDay = {}, pgtoByDay = {};
+  for (const r of gerRows) {
+    const kl = String(r[G.DATA_LIQ]  ?? '').trim();
+    if (kl) {
+      if (!liqByDay[kl])  liqByDay[kl]  = { liq: 0, anul: 0 };
+      liqByDay[kl].liq  += n(r[G.VL_LIQ]);
+      liqByDay[kl].anul += n(r[G.VL_ANUL]);
+    }
+    const kp = String(r[G.DATA_PGTO] ?? '').trim();
+    if (kp) {
+      if (!pgtoByDay[kp]) pgtoByDay[kp] = { ret: 0, liqL: 0 };
+      pgtoByDay[kp].ret  += n(r[G.VL_RET]);
+      pgtoByDay[kp].liqL += n(r[G.VL_LIQ_L]);
+    }
+  }
+
+  const allKeys = new Set([
+    ...Object.keys(empByDay),
+    ...Object.keys(liqByDay),
+    ...Object.keys(pgtoByDay),
+  ]);
+
+  const simples = [...allKeys]
+    .map(key => {
+      const d = parseDDMMYYYY(key);
+      if (!d) return null;
+      const li = liqByDay[key]  || { liq: 0, anul: 0 };
+      const pg = pgtoByDay[key] || { ret: 0, liqL: 0 };
+      return {
+        data: key, date: d,
+        empenhado: empByDay[key] || 0,
+        liquidado: li.liq, anulado: li.anul,
+        retido: pg.ret, pagoLiquido: pg.liqL,
+        pago: pg.ret + pg.liqL,
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.date - b.date);
+
+  let accEmp = 0, accLiq = 0, accPago = 0;
+  const acumulado = simples.map(d => {
+    accEmp  += d.empenhado;
+    accLiq  += d.liquidado;
+    accPago += d.pago;
+    return { ...d, empAcum: accEmp, liqAcum: accLiq, pagoAcum: accPago };
+  });
+
+  return { simples, acumulado };
+}
+
 export function computeMensal(empRows, gerRows) {
   const empBucket = {}, liqBucket = {}, pgtoBucket = {};
   let totalEmp = 0;

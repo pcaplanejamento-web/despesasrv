@@ -142,13 +142,20 @@ function addClickHandler(opts, dados, onClickCb) {
   };
 }
 
-/* ── Empenho × Liquidação × Pagamento por Mês (área) ── */
+/* ── Empenho × Liquidação × Pagamento por Dia (área) ── */
 export function renderChartMensalBarras(dados, onClickCb) {
   destroyIfExists('mensalBarras');
   const ctx = document.getElementById('chartMensalBarras');
   if (!ctx) return;
-  const labels = dados.map(d => MESES[d.mes - 1] ?? `Mês ${d.mes}`);
+  // Label no eixo X: dd/MM (5 primeiros chars de 'dd/MM/yyyy')
+  const labels = dados.map(d => d.data.slice(0, 5));
   const opts = areaOpts(c => ` ${c.dataset.label}: ${formatCurrency(c.parsed.y)}`);
+  // Tooltip mostra data completa no título
+  opts.plugins.tooltip.callbacks.title = items =>
+    dados[items[0]?.dataIndex]?.data ?? '';
+  // Limita rótulos no eixo X para não sobrecarregar
+  opts.scales.x.ticks.maxTicksLimit = 14;
+  opts.scales.x.ticks.autoSkip = true;
   addClickHandler(opts, dados, onClickCb);
   chartInstances.mensalBarras = new Chart(ctx, {
     type: 'line',
@@ -165,13 +172,17 @@ export function renderChartMensalBarras(dados, onClickCb) {
   });
 }
 
-/* ── Evolução Acumulada Mensal (área) ── */
+/* ── Evolução Acumulada Diária (área) ── */
 export function renderChartMensalLinha(dados, onClickCb) {
   destroyIfExists('mensalLinha');
   const ctx = document.getElementById('chartMensalLinha');
   if (!ctx) return;
-  const labels = dados.map(d => MESES[d.mes - 1] ?? `Mês ${d.mes}`);
+  const labels = dados.map(d => d.data.slice(0, 5));
   const opts = areaOpts(c => ` ${c.dataset.label}: ${formatCurrency(c.parsed.y)}`);
+  opts.plugins.tooltip.callbacks.title = items =>
+    dados[items[0]?.dataIndex]?.data ?? '';
+  opts.scales.x.ticks.maxTicksLimit = 14;
+  opts.scales.x.ticks.autoSkip = true;
   addClickHandler(opts, dados, onClickCb);
   chartInstances.mensalLinha = new Chart(ctx, {
     type: 'line',

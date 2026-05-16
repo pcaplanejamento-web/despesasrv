@@ -17,6 +17,7 @@ import {
   computeKpis,
   computeAgrupado,
   computeMensal,
+  computeDiario,
   parseDDMMYYYY,
 } from './compute.js?v=4';
 import {
@@ -86,6 +87,23 @@ function openDetailByKey(key, empColIdx, gerColIdx, sub, bannerClass) {
   });
 }
 
+/** Abre o drawer com todos os registros de um determinado dia. */
+function openDetailDia(data) {
+  const { emp, ger } = getCurrent();
+  openDetail({
+    title: data,
+    sub: 'Detalhes do dia',
+    bannerClass: 'section-banner--amber',
+    // empenhado pelo dia de empenho
+    empRows: emp.filter(r => String(r[6]  ?? '').trim() === data),
+    // liquidação pelo dia de liquidação OU dia de pagamento
+    gerRows: ger.filter(r =>
+      String(r[1]  ?? '').trim() === data ||   // DATA_LIQ
+      String(r[10] ?? '').trim() === data      // DATA_PGTO
+    ),
+  });
+}
+
 /** Abre o drawer com todos os registros de um determinado mês. */
 function openDetailMes(mes) {
   const { emp, ger } = getCurrent();
@@ -121,6 +139,7 @@ function renderPainelAll(empRows, gerRows) {
 
   const kpis     = computeKpis(empRows, gerRows);
   const mensal   = computeMensal(empRows, gerRows);
+  const diario   = computeDiario(empRows, gerRows);
   const orgaos   = computeAgrupado(empRows, gerRows, 1,  2,  'orgao');
   const acoes    = computeAgrupado(empRows, gerRows, 13, 17, 'acao');
   const elementos= computeAgrupado(empRows, gerRows, 14, 18, 'elemento');
@@ -130,9 +149,10 @@ function renderPainelAll(empRows, gerRows) {
 
   renderKpis(kpis);
 
+  const onDiarioClick = d => openDetailDia(d.data);
   const onMensalClick = d => openDetailMes(d.mes);
-  renderChartMensalBarras(mensal.simples,   onMensalClick);
-  renderChartMensalLinha(mensal.acumulado,  onMensalClick);
+  renderChartMensalBarras(diario.simples,   onDiarioClick);
+  renderChartMensalLinha(diario.acumulado,  onDiarioClick);
   renderChartProgressao(mensal.percentual,  onMensalClick);
   renderChartOrgaos(orgaos, d =>
     openDetailByKey(String(d.orgao ?? ''), 1, 2, 'Por Órgão', 'section-banner--blue')
